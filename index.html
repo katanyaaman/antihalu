@@ -210,6 +210,9 @@ async function refreshStatus(){
       `<span class="badge">openrouter key: <b>${s.keys.openrouter?'ada':'tidak'}</b></span>` +
       `<span class="badge">openai key: <b>${s.keys.openai?'ada':'tidak'}</b></span>` +
       `<span class="badge">backup config: <b>${s.config_backup_exists?'ada':'-'}</b></span>` +
+      (s.skill_installed
+        ? '<span class="badge on">skill godmode: <b>terinstall</b></span>'
+        : '<span class="badge off">skill godmode: <b>belum terinstall</b></span>') +
       `<span class="badge ${s.running?'off':''}">job: <b>${s.running?'BERJALAN':'idle'}</b></span>`;
     setBusy(!!s.running);
     document.getElementById('stOut').textContent =

@@ -91,6 +91,31 @@ def backup_config():
     if CONFIG_PATH.exists():
         shutil.copy2(CONFIG_PATH, BACKUP_PATH)
 
+# ---------------------------------------------------------------- skill installer
+def ensure_skill():
+    """Auto-install skill godmode (official) kalau belum ada — biar clone+run cukup."""
+    if SCRIPTS.exists():
+        return
+    print("Skill godmode belum terinstall — menginstall official/security/godmode ...", flush=True)
+    import subprocess
+    try:
+        r = subprocess.run(
+            ["hermes", "skills", "install", "official/security/godmode", "--force"],
+            input="y\n", text=True, capture_output=True, timeout=180,
+        )
+        if SCRIPTS.exists():
+            print("Skill godmode terinstall OK.", flush=True)
+            return
+        print("Install selesai tapi folder skill tidak ditemukan. Jalankan manual:", flush=True)
+        print("  hermes skills install official/security/godmode --force", flush=True)
+        print((r.stdout or "")[-400:], (r.stderr or "")[-200:], flush=True)
+    except FileNotFoundError:
+        print("Perintah 'hermes' tidak ditemukan. Install skill manual dulu:", flush=True)
+        print("  hermes skills install official/security/godmode --force", flush=True)
+    except Exception as e:
+        print(f"Auto-install gagal ({e}). Install skill manual dulu:", flush=True)
+        print("  hermes skills install official/security/godmode --force", flush=True)
+
 # ---------------------------------------------------------------- job system
 JOBS = {}
 JOBS_LOCK = threading.Lock()
@@ -353,7 +378,13 @@ class Handler(BaseHTTPRequestHandler):
 
 # ---------------------------------------------------------------- main
 def main():
-    load_godmode()
+    ensure_skill()
+    try:
+        load_godmode()
+    except Exception as e:
+        # jangan crash — server tetap jalan, UI nunjukin badge "belum terinstall"
+        print(f"Peringatan: skill godmode belum bisa dimuat ({e})", flush=True)
+        print("  Install manual: hermes skills install official/security/godmode --force", flush=True)
     server = ThreadingHTTPServer(("0.0.0.0", PORT), Handler)
     try:
         import socket

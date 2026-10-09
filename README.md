@@ -48,6 +48,8 @@ cd antihalu
 python3 dashboard.py
 ```
 
+> **Skill godmode auto-install:** saat pertama dijalankan, dashboard otomatis menjalankan `hermes skills install official/security/godmode` kalau skill-nya belum ada (butuh Hermes Agent terpasang). Kalau `hermes` gak ditemukan, jalankan perintah itu manual dulu lalu start ulang.
+
 Output pertama kali:
 
 ```

@@ -1,0 +1,11 @@
+tunnel: c0e5e483-7208-4c41-bad7-d72ebd9b25ec
+credentials-file: /etc/cloudflared/credentials.json
+
+ingress:
+  - hostname: model.agenticai.biz.id
+    service: http://127.0.0.1:20128
+  - hostname: hermes.agenticai.biz.id
+    service: http://127.0.0.1:9119
+  - hostname: godmode.agenticai.biz.id
+    service: http://127.0.0.1:8099
+  - service: http_status:404

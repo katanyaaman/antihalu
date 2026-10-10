@@ -525,6 +525,17 @@ class Handler(BaseHTTPRequestHandler):
     def do_GET(self):
         path = urlparse(self.path).path
         if not self._authed():
+            # halaman dibuka tanpa token -> redirect otomatis bawa token
+            # (biar buka domain polos langsung masuk, user gak ribet nempel ?t=)
+            if path in ("/", "/index.html", "/dashboard", "/dashboard.html"):
+                sep = "&" if "?" in self.path else "?"
+                self.send_response(302)
+                self.send_header("Location", f"{self.path}{sep}t={TOKEN}")
+                self.send_header("Content-Length", "0")
+                self.send_header("Cache-Control", "no-store")
+                self.end_headers()
+                return
+            # API tetap dikunci tanpa token
             self._json({"error": "Token tidak valid. Buka lewat URL lengkap dengan ?t=..."}, 403)
             return
         if path in ("/", "/index.html"):

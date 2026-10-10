@@ -524,29 +524,34 @@ class Handler(BaseHTTPRequestHandler):
     # ---- GET
     def do_GET(self):
         path = urlparse(self.path).path
-        if not self._authed():
-            # halaman dibuka tanpa token -> redirect otomatis bawa token
-            # (biar buka domain polos langsung masuk, user gak ribet nempel ?t=)
-            if path in ("/", "/index.html", "/dashboard", "/dashboard.html"):
-                sep = "&" if "?" in self.path else "?"
+        q = parse_qs(urlparse(self.path).query)
+        tq = (q.get("t") or [""])[0]
+        SET_COOKIE = f"gm_t={TOKEN}; Path=/; Max-Age=31536000; SameSite=Lax"
+
+        # Halaman: selalu bisa dibuka. Token dipindahkan dari URL ke cookie
+        # supaya address bar & link menu tetap bersih (gak nempel ?t=...)
+        if path in ("/", "/index.html", "/dashboard", "/dashboard.html"):
+            if tq == TOKEN:
+                # ada token di URL -> simpan ke cookie, redirect ke URL bersih
                 self.send_response(302)
-                self.send_header("Location", f"{self.path}{sep}t={TOKEN}")
+                self.send_header("Location", path)
+                self.send_header("Set-Cookie", SET_COOKIE)
                 self.send_header("Content-Length", "0")
                 self.send_header("Cache-Control", "no-store")
                 self.end_headers()
                 return
-            # API tetap dikunci tanpa token
+            target = INDEX_FILE
+            if path in ("/dashboard", "/dashboard.html"):
+                dash_file = HERE / "dashboard.html"
+                target = dash_file if dash_file.exists() else INDEX_FILE
+            html = target.read_text(encoding="utf-8")
+            self._send(200, html, "text/html; charset=utf-8",
+                       headers={"Set-Cookie": SET_COOKIE})
+            return
+
+        # API: tetap dikunci tanpa token (query/header) atau cookie
+        if not self._authed():
             self._json({"error": "Token tidak valid. Buka lewat URL lengkap dengan ?t=..."}, 403)
-            return
-        if path in ("/", "/index.html"):
-            html = INDEX_FILE.read_text(encoding="utf-8")
-            self._send(200, html, "text/html; charset=utf-8")
-            return
-        if path in ("/dashboard", "/dashboard.html"):
-            dash_file = HERE / "dashboard.html"
-            target_dash = dash_file if dash_file.exists() else INDEX_FILE
-            html = target_dash.read_text(encoding="utf-8")
-            self._send(200, html, "text/html; charset=utf-8")
             return
         if path == "/api/status":
             self._json(get_status())

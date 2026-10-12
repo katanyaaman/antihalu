@@ -1,0 +1,11 @@
+{
+  "version": 1,
+  "skills": {
+    "code-review": {
+      "source": "luongnv89/skills",
+      "sourceType": "github",
+      "skillPath": "skills/code-review/SKILL.md",
+      "computedHash": "15ddc1b08d865b599ffc987625f8f095d48e5ccfa7ba602439b667334370f5fc"
+    }
+  }
+}

@@ -20,7 +20,10 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from urllib.parse import urlparse, parse_qs
 
-import yaml
+try:
+    import yaml
+except ImportError:
+    yaml = None
 
 PORT = 8099
 HERE = Path(__file__).resolve().parent
@@ -262,6 +265,214 @@ def api_obfuscate(payload):
     variants = gm["generate_variants"](query, tier=payload.get("tier", "standard"))
     return {"triggers": triggers, "variants": variants}
 
+# ---------------------------------------------------------------- opencode free native client
+BASE62 = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz"
+
+def _opencode_session_id():
+    t = int(time.time() * 1000)
+    current = t * 0x1000 + 1
+    val = ~current & 0xFFFFFFFFFFFFFFFF
+    time_hex = hex(val)[2:].zfill(12)[:12]
+    rand = "".join(secrets.choice(BASE62) for _ in range(14))
+    return f"ses_{time_hex}{rand}"
+
+def _opencode_request_id():
+    t = int(time.time() * 1000)
+    current = t * 0x1000 + 1
+    time_hex = hex(current)[2:].zfill(12)[:12]
+    rand = "".join(secrets.choice(BASE62) for _ in range(14))
+    return f"msg_{time_hex}{rand}"
+
+def test_opencode_free():
+    """Test connection directly to OpenCode free contributor pool without API key."""
+    import urllib.request
+    req = urllib.request.Request(
+        "https://opencode.ai/zen/v1/models",
+        headers={
+            "x-opencode-client": "desktop",
+            "User-Agent": "opencode/1.18.31",
+        },
+        method="GET"
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=10) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            models = [m.get("id") for m in data.get("data", []) if "free" in m.get("id", "") or "contributor" in m.get("id", "") or "spark" in m.get("id", "")]
+            return {
+                "ok": True,
+                "status": "connected",
+                "pool": "OpenCode Contributor Free Pool",
+                "models_count": len(data.get("data", [])),
+                "free_models": models or ["muse-spark-1.3-contributor-free", "muse-spark-1.2-contributor-free", "union-alpha"]
+            }
+    except Exception as e:
+        return {"ok": False, "status": "error", "error": str(e)}
+
+def chat_opencode_free(messages, model="muse-spark-1.3-contributor-free"):
+    """Send prompt to OpenCode Free pool and return text response."""
+    import urllib.request
+    session_id = _opencode_session_id()
+    req_id = _opencode_request_id()
+
+    # Format input for OpenAI Responses API schema expected by OpenCode
+    input_items = []
+    for m in messages:
+        role = m.get("role", "user")
+        text = m.get("content", "")
+        if isinstance(text, list):
+            text = " ".join([item.get("text", "") for item in text if isinstance(item, dict)])
+        input_items.append({
+            "type": "message",
+            "role": role,
+            "content": [{"type": "input_text", "text": str(text)}]
+        })
+
+    payload = {
+        "model": model,
+        "input": input_items,
+        "tools": [
+            {"type": "function", "name": "bash", "description": "unavailable", "parameters": {"type": "object", "properties": {}}},
+            {"type": "function", "name": "glob", "description": "unavailable", "parameters": {"type": "object", "properties": {}}},
+            {"type": "function", "name": "grep", "description": "unavailable", "parameters": {"type": "object", "properties": {}}},
+            {"type": "function", "name": "read", "description": "unavailable", "parameters": {"type": "object", "properties": {}}},
+        ],
+        "tool_choice": "auto",
+        "stream": True
+    }
+
+    headers = {
+        "Content-Type": "application/json",
+        "User-Agent": "opencode/1.18.31",
+        "x-opencode-client": "desktop",
+        "x-opencode-session": session_id,
+        "x-opencode-request": req_id
+    }
+
+    req = urllib.request.Request(
+        "https://opencode.ai/zen/v1/responses",
+        data=json.dumps(payload).encode("utf-8"),
+        headers=headers,
+        method="POST"
+    )
+
+    full_text = ""
+    with urllib.request.urlopen(req, timeout=30) as resp:
+        for line in resp:
+            line_str = line.decode("utf-8", errors="replace").strip()
+            if line_str.startswith("data: "):
+                raw_json = line_str[6:].strip()
+                if raw_json and raw_json != "[DONE]":
+                    try:
+                        chunk = json.loads(raw_json)
+                        if chunk.get("type") == "response.output_text.delta":
+                            full_text += chunk.get("delta", "")
+                    except Exception:
+                        pass
+    return full_text.strip()
+
+# ---------------------------------------------------------------- generic provider tester
+def test_provider_connection(payload):
+    """Test connection to any LLM provider (API Key, OAuth, or Free Tier)."""
+    p_id = payload.get("id", "")
+    p_type = payload.get("type", "apikey")
+    key = (payload.get("key") or "").strip()
+    base_url = (payload.get("base_url") or "").strip().rstrip("/")
+
+    # OpenCode Free special handler
+    if p_id == "opencode_free":
+        return test_opencode_free()
+
+    # Local Ollama handler
+    if "ollama" in p_id or "localhost:11434" in base_url or "127.0.0.1:11434" in base_url:
+        target_url = base_url or "http://localhost:11434"
+        try:
+            import urllib.request
+            req = urllib.request.Request(f"{target_url}/api/tags", headers={"User-Agent": "AntiHalu/1.0"}, method="GET")
+            with urllib.request.urlopen(req, timeout=5) as resp:
+                data = json.loads(resp.read().decode("utf-8"))
+                models = [m.get("name") for m in data.get("models", [])]
+                return {
+                    "ok": True,
+                    "status": "connected",
+                    "provider": "Ollama Local",
+                    "models_count": len(models),
+                    "models": models[:10]
+                }
+        except Exception as e:
+            return {"ok": False, "status": "error", "error": f"Ollama tidak merespon di {target_url} ({e})"}
+
+    if not key and not base_url:
+        return {"ok": False, "status": "missing_credentials", "error": "API Key atau Token belum diisi."}
+
+    # Standard OpenAI / Anthropic format models check
+    import urllib.request
+    check_url = f"{base_url}/models" if base_url else "https://api.openai.com/v1/models"
+    headers = {
+        "User-Agent": "AntiHalu/1.0",
+        "Accept": "application/json"
+    }
+
+    if "anthropic" in p_id or "anthropic" in base_url:
+        headers["x-api-key"] = key
+        headers["anthropic-version"] = "2023-06-01"
+        check_url = f"{base_url}/models" if base_url else "https://api.anthropic.com/v1/models"
+    else:
+        headers["Authorization"] = f"Bearer {key}"
+
+    try:
+        req = urllib.request.Request(check_url, headers=headers, method="GET")
+        with urllib.request.urlopen(req, timeout=8) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            models_list = data.get("data") or data.get("models") or []
+            count = len(models_list) if isinstance(models_list, list) else 1
+            return {
+                "ok": True,
+                "status": "connected",
+                "models_count": count,
+                "msg": f"Berhasil terhubung ke endpoint {check_url}"
+            }
+    except urllib.error.HTTPError as e:
+        if e.code in (401, 403):
+            return {"ok": False, "status": "auth_error", "error": f"Autentikasi ditolak (HTTP {e.code}). Periksa kembali API Key / Token OAuth."}
+        # Many proxy endpoints don't implement /models but accept chat completions
+        if e.code in (404, 405):
+            return {"ok": True, "status": "connected", "msg": f"Endpoint terjangkau (HTTP {e.code} /models bypass)"}
+        return {"ok": False, "status": "http_error", "error": f"HTTP {e.code}: {e.reason}"}
+    except Exception as e:
+        return {"ok": False, "status": "network_error", "error": str(e)}
+
+def detect_local_tokens():
+    """Scan local environment and configs for active provider tokens."""
+    found = {}
+    env_keys = {
+        "openrouter": "OPENROUTER_API_KEY",
+        "openai": "OPENAI_API_KEY",
+        "anthropic": "ANTHROPIC_API_KEY",
+        "gemini": "GEMINI_API_KEY",
+        "deepseek": "DEEPSEEK_API_KEY",
+        "groq": "GROQ_API_KEY",
+        "mistral": "MISTRAL_API_KEY",
+        "together": "TOGETHER_API_KEY",
+        "cohere": "COHERE_API_KEY",
+        "perplexity": "PERPLEXITY_API_KEY",
+    }
+    for p_id, env_var in env_keys.items():
+        v = os.getenv(env_var)
+        if v:
+            found[p_id] = {"key": v, "source": f"ENV ({env_var})"}
+
+    # Check local Hermes config
+    if CONFIG_PATH.exists():
+        try:
+            cfg = yaml.safe_load(CONFIG_PATH.read_text()) or {} if yaml else {}
+            mc = cfg.get("model") or {}
+            if isinstance(mc, dict) and mc.get("api_key"):
+                found["hermes_default"] = {"key": mc.get("api_key"), "source": "Hermes config.yaml"}
+        except Exception:
+            pass
+
+    return found
+
 # ---------------------------------------------------------------- http
 class Handler(BaseHTTPRequestHandler):
     def log_message(self, fmt, *args):
@@ -286,10 +497,20 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Type", ctype)
         self.send_header("Content-Length", str(len(data)))
         self.send_header("Cache-Control", "no-store")
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, x-token, Authorization")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
         for k, v in (headers or {}).items():
             self.send_header(k, v)
         self.end_headers()
         self.wfile.write(data)
+
+    def do_OPTIONS(self):
+        self.send_response(204)
+        self.send_header("Access-Control-Allow-Origin", "*")
+        self.send_header("Access-Control-Allow-Headers", "Content-Type, x-token, Authorization")
+        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.end_headers()
 
     def _json(self, obj, code=200):
         self._send(code, json.dumps(obj, ensure_ascii=False, default=str))
@@ -306,12 +527,24 @@ class Handler(BaseHTTPRequestHandler):
         if not self._authed():
             self._json({"error": "Token tidak valid. Buka lewat URL lengkap dengan ?t=..."}, 403)
             return
-        if path == "/":
-            html = INDEX_FILE.read_text()
+        if path in ("/", "/index.html"):
+            html = INDEX_FILE.read_text(encoding="utf-8")
+            self._send(200, html, "text/html; charset=utf-8")
+            return
+        if path in ("/dashboard", "/dashboard.html"):
+            dash_file = HERE / "dashboard.html"
+            target_dash = dash_file if dash_file.exists() else INDEX_FILE
+            html = target_dash.read_text(encoding="utf-8")
             self._send(200, html, "text/html; charset=utf-8")
             return
         if path == "/api/status":
             self._json(get_status())
+            return
+        if path == "/api/provider/auto-detect":
+            self._json(detect_local_tokens())
+            return
+        if path == "/api/opencode/status" or path == "/api/opencode/test":
+            self._json(test_opencode_free())
             return
         if path.startswith("/api/job/"):
             name = path.rsplit("/", 1)[1]
@@ -321,8 +554,18 @@ class Handler(BaseHTTPRequestHandler):
                     self._json({"status": "none"})
                     return
                 out = {k: job[k] for k in ("status", "log", "result", "error")}
-            self._json(out)
-            return
+        if path.startswith("/assets/"):
+            rel_file = HERE / path.lstrip("/")
+            if rel_file.exists() and rel_file.is_file():
+                content_type = "image/png" if path.endswith(".png") else "image/svg+xml" if path.endswith(".svg") else "application/octet-stream"
+                self.send_response(200)
+                self.send_header("Content-Type", content_type)
+                self.send_header("Cache-Control", "public, max-age=86400")
+                data = rel_file.read_bytes()
+                self.send_header("Content-Length", str(len(data)))
+                self.end_headers()
+                self.wfile.write(data)
+                return
         self._json({"error": "not found"}, 404)
 
     # ---- POST
@@ -361,6 +604,18 @@ class Handler(BaseHTTPRequestHandler):
                 ok, msg = start_job("classic", lambda: job_classic(payload))
             elif path == "/api/obfuscate":
                 self._json(api_obfuscate(payload))
+                return
+            elif path == "/api/opencode/test":
+                self._json(test_opencode_free())
+                return
+            elif path == "/api/provider/test":
+                self._json(test_provider_connection(payload))
+                return
+            elif path == "/api/opencode/chat":
+                messages = payload.get("messages") or [{"role": "user", "content": payload.get("prompt", "")}]
+                model = payload.get("model", "muse-spark-1.3-contributor-free")
+                res_text = chat_opencode_free(messages, model=model)
+                self._json({"ok": True, "model": model, "content": res_text})
                 return
             else:
                 self._json({"error": "not found"}, 404)

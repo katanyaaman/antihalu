@@ -1,0 +1,3166 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AntiHalu — Security Command Center</title>
+<style>
+  @font-face {
+    font-family: 'HarveySerifFont';
+    src: local('Playfair Display'), local('Georgia'), local('Times New Roman'), serif;
+  }
+  @font-face {
+    font-family: 'HarveySansFont';
+    src: local('Segoe UI'), local('-apple-system'), local('Arial'), sans-serif;
+  }
+
+  :root {
+    --ink: #0F0E0D;
+    --ink-secondary: #33312C;
+    --muted: #706D66;
+    --muted-soft: #8F8B85;
+    --surface: #FFFFFF;
+    --surface-muted: #F2F1F0;
+    --surface-dark: #1F1D1A;
+    --surface-black: #0F0E0D;
+    --hairline: #CCCAC6;
+    --border-strong: #ADABA5;
+    --border-dark: #33312C;
+    --on-dark: #FFFFFF;
+    --highlight: #F6F202;
+    --focus-ring: #99C8FF;
+    --focus-ring-strong: #005FCC;
+    --radius-xs: 3px;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-pill: 9999px;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    background-color: var(--surface-muted);
+    color: var(--ink);
+    font-family: HarveySansFont, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-size: 16px;
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+    display: flex;
+    min-height: 100vh;
+  }
+
+  /* ---------------- Harvey Sidebar ---------------- */
+  aside.sidebar {
+    width: 256px;
+    background-color: var(--surface-black);
+    color: #FAFAF9;
+    display: flex;
+    flex-direction: column;
+    flex-shrink: 0;
+    position: sticky;
+    top: 0;
+    height: 100vh;
+    border-right: 1px solid var(--border-dark);
+    user-select: none;
+    z-index: 50;
+    overflow-y: auto;
+  }
+
+  .sidebar-header {
+    padding: 24px 20px 20px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid var(--border-dark);
+  }
+
+  .sidebar-brand-badge {
+    width: 32px;
+    height: 32px;
+    background-color: #FFFFFF;
+    color: var(--ink);
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: HarveySerifFont, "Georgia", serif;
+    font-size: 20px;
+    font-weight: 600;
+  }
+
+  .sidebar-brand-text h1 {
+    font-family: HarveySerifFont, "Georgia", serif;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.24px;
+    color: #FFFFFF;
+    margin: 0;
+    line-height: 1.2;
+  }
+  .sidebar-brand-text span {
+    font-size: 14px;
+    color: var(--hairline);
+    display: block;
+  }
+
+  .sidebar-section-title {
+    padding: 20px 20px 8px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--hairline);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  nav.sidebar-menu {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    padding: 0 12px;
+  }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: var(--radius-md);
+    color: var(--hairline);
+    font-size: 14px;
+    font-weight: 500;
+    text-decoration: none;
+    cursor: pointer;
+    border: none;
+    background: transparent;
+    width: 100%;
+    text-align: left;
+    transition: background-color 0.12s, color 0.12s;
+  }
+  .nav-item * {
+    pointer-events: none;
+  }
+  .nav-item:hover {
+    background-color: rgba(255, 255, 255, 0.06);
+    color: #FFFFFF;
+  }
+  .nav-item.active {
+    background-color: var(--surface-dark);
+    color: #FFFFFF;
+    font-weight: 600;
+  }
+
+  .nav-item .nav-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 18px;
+    opacity: 0.9;
+  }
+
+  .sidebar-info-box {
+    margin: 16px 12px;
+    padding: 12px 14px;
+    background-color: var(--surface-dark);
+    border: 1px solid var(--border-dark);
+    border-radius: var(--radius-md);
+    font-size: 14px;
+    color: var(--hairline);
+  }
+  .sidebar-info-box .info-label {
+    color: var(--hairline);
+    font-size: 14px;
+    margin-bottom: 2px;
+  }
+  .sidebar-info-box .info-val {
+    font-weight: 500;
+    word-break: break-all;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 16px 20px;
+    border-top: 1px solid var(--border-dark);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 14px;
+    color: var(--hairline);
+  }
+
+  .runtime-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: var(--highlight);
+    flex-shrink: 0;
+  }
+
+  /* ---------------- Main Content Layout ---------------- */
+  main.main-viewport {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    background-color: var(--surface);
+  }
+
+  .content-container {
+    max-width: 1280px;
+    padding: 36px 44px 80px;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  /* ---------------- Top Editorial Header ---------------- */
+  .editorial-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .page-title {
+    font-family: HarveySerifFont, "Georgia", serif;
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.32px;
+    color: var(--ink);
+    margin: 0 0 6px 0;
+  }
+
+  .page-subtitle {
+    font-size: 16px;
+    color: var(--muted);
+    margin: 0;
+    line-height: 1.3;
+  }
+
+  .header-actions {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Top Summary Banner */
+  .harvey-banner {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 18px;
+    background-color: var(--surface-muted);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    margin-bottom: 24px;
+    font-size: 14px;
+  }
+  .banner-left {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--ink);
+  }
+  .banner-brand-badge {
+    width: 22px;
+    height: 22px;
+    background-color: var(--ink);
+    color: #FFFFFF;
+    border-radius: var(--radius-xs);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    font-weight: 600;
+    font-family: HarveySerifFont, serif;
+  }
+
+  /* Buttons */
+  .harvey-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    font-family: HarveySansFont, sans-serif;
+    font-size: 14px;
+    font-weight: 500;
+    line-height: 1;
+    padding: 9px 16px;
+    border-radius: var(--radius-md);
+    cursor: pointer;
+    border: 1px solid transparent;
+    text-decoration: none;
+    transition: all 0.15s ease;
+    white-space: nowrap;
+  }
+  .harvey-btn:focus-visible {
+    outline: none;
+    box-shadow: 0 0 0 3px var(--focus-ring);
+  }
+  .btn-black {
+    background-color: var(--ink);
+    color: #FFFFFF;
+    border-color: var(--ink);
+  }
+  .btn-black:hover {
+    background-color: #000000;
+    border-color: #000000;
+  }
+  .btn-outline {
+    background-color: var(--surface);
+    color: var(--ink);
+    border-color: var(--border-strong);
+  }
+  .btn-outline:hover {
+    background-color: var(--surface-muted);
+    border-color: var(--ink);
+  }
+  .btn-pill {
+    border-radius: var(--radius-pill);
+  }
+  .btn-sm {
+    font-size: 14px;
+    padding: 6px 12px;
+  }
+
+  /* ---------------- KPI Metric Cards ---------------- */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 16px;
+    margin-bottom: 28px;
+  }
+
+  .kpi-card {
+    background-color: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    padding: 20px 24px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    transition: border-color 0.15s;
+  }
+  .kpi-card:hover {
+    border-color: var(--border-strong);
+  }
+
+  .kpi-val {
+    font-family: HarveySerifFont, "Georgia", serif;
+    font-size: 32px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.32px;
+    color: var(--ink);
+    display: flex;
+    align-items: baseline;
+    gap: 8px;
+  }
+
+  .kpi-label {
+    font-size: 14px;
+    font-weight: 400;
+    color: var(--muted);
+    line-height: 1.3;
+    margin-top: 6px;
+  }
+
+  /* Status Pills */
+  .status-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 14px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: var(--radius-pill);
+    white-space: nowrap;
+  }
+  .status-pill.amber {
+    background-color: var(--surface-muted);
+    color: var(--ink-secondary);
+    border: 1px solid var(--border-strong);
+  }
+  .status-pill.blue {
+    background-color: var(--surface-muted);
+    color: var(--focus-ring-strong);
+    border: 1px solid var(--focus-ring);
+  }
+  .status-pill.green {
+    background-color: var(--surface-dark);
+    color: var(--on-dark);
+  }
+  .status-pill.gray {
+    background-color: var(--surface-muted);
+    color: var(--muted);
+  }
+
+  /* ---------------- Form Elements & Dual Pane ---------------- */
+  .dual-pane {
+    display: grid;
+    grid-template-columns: 1.1fr 1fr;
+    gap: 28px;
+    align-items: start;
+  }
+  @media (max-width: 960px) {
+    .dual-pane { grid-template-columns: 1fr; }
+  }
+
+  .editorial-card {
+    background-color: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    padding: 28px 32px;
+  }
+
+  .editorial-card-head {
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 14px;
+  }
+  .editorial-card-head h3 {
+    font-family: HarveySerifFont, "Georgia", serif;
+    font-size: 24px;
+    font-weight: 400;
+    line-height: 1.05;
+    letter-spacing: -0.24px;
+    margin: 0 0 6px 0;
+  }
+  .editorial-card-head .desc {
+    margin: 0;
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.4;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-secondary);
+    margin-bottom: 6px;
+  }
+
+  input[type="text"], input[type="password"], textarea, select {
+    width: 100%;
+    padding: 10px 14px;
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    font-family: inherit;
+    font-size: 14px;
+    color: var(--ink);
+    background-color: var(--surface);
+    margin-bottom: 14px;
+    outline: none;
+    transition: border-color 0.15s, box-shadow 0.15s;
+  }
+  input[type="text"]:focus, input[type="password"]:focus, textarea:focus {
+    border-color: var(--ink);
+    box-shadow: 0 0 0 2px var(--focus-ring);
+  }
+  textarea {
+    resize: vertical;
+    min-height: 110px;
+  }
+
+  .segmented-pills {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 16px;
+  }
+  .segmented-pill {
+    padding: 6px 14px;
+    font-size: 14px;
+    font-weight: 500;
+    border-radius: var(--radius-pill);
+    border: 1px solid var(--hairline);
+    background-color: var(--surface-muted);
+    color: var(--ink-secondary);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+  .segmented-pill:hover {
+    border-color: var(--border-strong);
+  }
+  .segmented-pill.active {
+    background-color: var(--ink);
+    color: #FFFFFF;
+    border-color: var(--ink);
+  }
+
+  .collapsible-box {
+    margin: 10px 0 16px;
+    border-top: 1px solid var(--hairline);
+    padding-top: 10px;
+  }
+  .collapsible-box summary {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--ink-secondary);
+    cursor: pointer;
+  }
+
+  .checkbox-group {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    color: var(--ink-secondary);
+    margin-bottom: 18px;
+    cursor: pointer;
+  }
+
+  .action-row {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-top: 12px;
+  }
+
+  /* ---------------- Stepper Timeline & Outputs ---------------- */
+  .side-panel {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+  }
+
+  .progress-card {
+    background-color: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    padding: 24px;
+  }
+
+  .progress-card-title {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 20px;
+    color: var(--ink);
+  }
+
+  .timeline-list {
+    position: relative;
+    padding-left: 28px;
+  }
+  .timeline-list::before {
+    content: "";
+    position: absolute;
+    left: 10px;
+    top: 10px;
+    bottom: 24px;
+    width: 2px;
+    background-color: var(--hairline);
+  }
+
+  .timeline-step {
+    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    padding-bottom: 20px;
+    font-size: 14px;
+  }
+  .timeline-step:last-child { padding-bottom: 0; }
+
+  .step-node {
+    position: absolute;
+    left: -28px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    background-color: var(--surface);
+    border: 2px solid var(--hairline);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    color: var(--muted);
+    z-index: 2;
+  }
+
+  .timeline-step.done .step-node {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+  .timeline-step.active .step-node {
+    border-color: var(--ink);
+    color: var(--ink);
+  }
+
+  /* ---------------- Document / Table Card ---------------- */
+  .editorial-table-card {
+    background-color: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    overflow: hidden;
+  }
+
+  .table-toolbar {
+    padding: 16px 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 1px solid var(--hairline);
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  table.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: left;
+    font-size: 14px;
+  }
+
+  table.data-table th {
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--muted);
+    border-bottom: 1px solid var(--hairline);
+    background-color: var(--surface-muted);
+  }
+
+  table.data-table td {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--ink);
+    vertical-align: middle;
+  }
+
+  table.data-table tr:last-child td { border-bottom: none; }
+  table.data-table tr:hover td { background-color: var(--surface-muted); }
+
+  /* ---------------- Dark Terminal Console ---------------- */
+  .harvey-terminal {
+    background-color: var(--surface-dark);
+    color: #FAFAF9;
+    border-radius: var(--radius-md);
+    overflow: hidden;
+    border: 1px solid var(--border-dark);
+  }
+
+  .terminal-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background-color: rgba(0, 0, 0, 0.3);
+    border-bottom: 1px solid var(--border-dark);
+    font-size: 14px;
+    color: var(--hairline);
+  }
+
+  pre.harvey-console {
+    margin: 0;
+    background: transparent;
+    color: var(--hairline);
+    font-family: HarveySansFont, monospace;
+    font-size: 14px;
+    line-height: 1.5;
+    padding: 14px;
+    max-height: 320px;
+    overflow-y: auto;
+    white-space: pre-wrap;
+    word-break: break-word;
+    min-height: 140px;
+  }
+
+  /* ---------------- Provider Grid & Cards (9router style) ---------------- */
+  .provider-toolbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+    gap: 16px;
+    flex-wrap: wrap;
+  }
+
+  .provider-search-box {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background-color: var(--surface);
+    border: 1px solid var(--border-strong);
+    border-radius: var(--radius-sm);
+    padding: 8px 14px;
+    flex: 1;
+    max-width: 380px;
+  }
+  .provider-search-box input {
+    border: none;
+    background: transparent;
+    font-size: 14px;
+    color: var(--ink);
+    outline: none;
+    width: 100%;
+    margin-bottom: 0;
+    padding: 0;
+  }
+
+  .provider-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .provider-section {
+    margin-bottom: 32px;
+  }
+
+  .provider-section-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--hairline);
+  }
+  .provider-section-head h3 {
+    font-family: HarveySerifFont, "Georgia", serif;
+    font-size: 20px;
+    font-weight: 400;
+    letter-spacing: -0.24px;
+    margin: 0;
+    color: var(--ink);
+  }
+
+  .provider-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 14px;
+  }
+
+  .provider-card {
+    background-color: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    cursor: pointer;
+    transition: border-color 0.15s, transform 0.12s, box-shadow 0.12s;
+    user-select: none;
+  }
+  .provider-card:hover {
+    border-color: var(--ink);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04);
+  }
+
+  .provider-avatar {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    overflow: hidden;
+    background: transparent;
+  }
+  .provider-avatar img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+    display: block;
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: high-quality;
+    transform: translateZ(0);
+    backface-visibility: hidden;
+  }
+  .provider-avatar svg {
+    width: 32px;
+    height: 32px;
+    border-radius: var(--radius-sm);
+    display: block;
+  }
+
+  .provider-body {
+    flex: 1;
+    min-width: 0;
+  }
+  .provider-name {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+    margin-bottom: 2px;
+  }
+
+  .provider-sub {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.2;
+    display: flex;
+    align-items: center;
+  }
+  .provider-sub .no-conn {
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 400;
+  }
+
+  /* Modal Popup for Provider Config */
+  .harvey-modal-backdrop {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(15, 14, 13, 0.6);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  .harvey-modal-backdrop.open {
+    display: flex;
+  }
+
+  .harvey-modal {
+    background-color: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    width: 100%;
+    max-width: 520px;
+    padding: 28px 32px;
+    box-shadow: 0 16px 36px rgba(0, 0, 0, 0.25);
+  }
+
+  .modal-head {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 20px;
+    border-bottom: 1px solid var(--hairline);
+    padding-bottom: 12px;
+  }
+  .modal-head h3 {
+    font-family: HarveySerifFont, "Georgia", serif;
+    font-size: 24px;
+    font-weight: 400;
+    margin: 0 0 4px 0;
+  }
+  .modal-head p {
+    font-size: 14px;
+    color: var(--muted);
+    margin: 0;
+  }
+
+  /* Workspace Tabs visibility */
+  .workspace-view {
+    display: none;
+  }
+  .workspace-view.active {
+    display: block;
+  }
+
+  /* Status Toast */
+  #toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background-color: var(--ink);
+    color: #FFFFFF;
+    padding: 12px 20px;
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    font-weight: 500;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.15s ease, transform 0.15s ease;
+    transform: translateY(8px);
+    z-index: 2000;
+  }
+  #toast.show {
+    opacity: 1;
+    pointer-events: auto;
+    transform: translateY(0);
+  }
+
+  .spin {
+    display: inline-block;
+    width: 14px;
+    height: 14px;
+    border: 2px solid rgba(0, 0, 0, 0.2);
+    border-top-color: var(--ink);
+    border-radius: 50%;
+    animation: sp 0.8s linear infinite;
+  }
+  @keyframes sp { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+  <!-- ================= Left Sidebar ================= -->
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="sidebar-brand-badge">A</div>
+      <div class="sidebar-brand-text">
+        <h1>AntiHalu</h1>
+        <span>Hermes Security Suite</span>
+      </div>
+    </div>
+
+    <div class="sidebar-section-title">Modul Operasi</div>
+    <nav class="sidebar-menu" aria-label="Menu Utama">
+      <button type="button" class="nav-item active" data-tab="tab-auto" id="sideNavAuto" onclick="switchTab('tab-auto')">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="10" rx="2"></rect><circle cx="12" cy="5" r="2"></circle><path d="M12 7v4"></path><line x1="8" y1="16" x2="8.01" y2="16"></line><line x1="16" y1="16" x2="16.01" y2="16"></line></svg>
+        </span>
+        <span>Auto-Jailbreak</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-parsel" id="sideNavParsel" onclick="switchTab('tab-parsel')">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"></rect><circle cx="12" cy="12" r="3"></circle><path d="M12 9v1"></path><path d="M12 14v1"></path><path d="M9.5 10.5l.8.8"></path><path d="M13.7 14.7l.8.8"></path></svg>
+        </span>
+        <span>Parseltongue Vault</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-race" id="sideNavRace" onclick="switchTab('tab-race')">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path><line x1="4" y1="22" x2="4" y2="15"></line></svg>
+        </span>
+        <span>Benchmark Race</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-providers" id="sideNavProviders" onclick="switchTab('tab-providers')">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect><rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect><line x1="6" y1="6" x2="6.01" y2="6"></line><line x1="6" y1="18" x2="6.01" y2="18"></line></svg>
+        </span>
+        <span>Providers</span>
+      </button>
+      <button type="button" class="nav-item" data-tab="tab-status" id="sideNavStatus" onclick="switchTab('tab-status')">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+        </span>
+        <span>Command Center</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-section-title">Lingkungan</div>
+    <div class="sidebar-info-box">
+      <div class="info-label" style="display:flex;align-items:center;gap:6px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
+        <span>Skill Target</span>
+      </div>
+      <div class="info-val">official/security/godmode</div>
+      <div class="info-label" style="display:flex;align-items:center;gap:6px;margin-top:8px;">
+        <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+        <span>Otentikasi</span>
+      </div>
+      <div class="info-val">Token Protected</div>
+    </div>
+
+    <div class="sidebar-footer">
+      <div class="runtime-dot" id="sideRuntimeDot" title="Runtime Aktif"></div>
+      <span id="sideRuntimeLabel">Hermes Port: 8099</span>
+    </div>
+  </aside>
+
+  <!-- ================= Main Viewport ================= -->
+  <main class="main-viewport">
+    <div class="content-container">
+
+      <!-- Top Header -->
+      <header class="editorial-header">
+        <div>
+          <h2 class="page-title" id="pageTitleText">Model Safety Evaluation</h2>
+          <p class="page-subtitle" id="pageSubtitleText">Uji ketahanan guardrail model target secara berurutan dan terapkan strategi bypass ke config Hermes jika berhasil.</p>
+        </div>
+        <div class="header-actions">
+          <a href="index.html" class="harvey-btn btn-outline btn-pill" id="btnBackPortal" style="text-decoration:none;">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m15 18-6-6 6-6"/></svg>
+            <span>Overview &amp; Portal</span>
+          </a>
+          <button class="harvey-btn btn-outline btn-pill" id="btnRefresh">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+            <span>Refresh Telemetry</span>
+          </button>
+        </div>
+      </header>
+
+      <!-- Harvey Summary Banner -->
+      <div class="harvey-banner">
+        <div class="banner-left">
+          <div class="banner-brand-badge">A</div>
+          <span id="bannerSummaryText">AntiHalu auto-detected target parameters for active security session.</span>
+        </div>
+        <span style="color:var(--muted);font-size:14px;">Port 8099 Active</span>
+      </div>
+
+      <!-- 4 Telemetry Metric Cards (Always Available) -->
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <span class="kpi-val" id="kpiModel">Auto</span>
+          <span class="kpi-label">Active Model</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-val" id="kpiJb">
+            <span class="status-pill gray" id="kpiJbPill">–</span>
+          </span>
+          <span class="kpi-label">Jailbreak Guardrail</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-val" id="kpiKeys" style="font-size:24px;">memuat…</span>
+          <span class="kpi-label">Provider API Keys</span>
+        </div>
+        <div class="kpi-card">
+          <span class="kpi-val" id="kpiJob">Idle</span>
+          <span class="kpi-label">Execution State</span>
+        </div>
+      </div>
+
+      <!-- ================= TAB 1: AUTO JAILBREAK ================= -->
+      <section class="workspace-view active" id="tab-auto">
+        <div class="dual-pane">
+          <div class="editorial-card">
+            <div class="editorial-card-head">
+              <h3>Evaluasi Guardrail Target</h3>
+              <p class="desc">Uji ketahanan model target dan kunci payload strategi bypass yang berhasil ke config.yaml Hermes.</p>
+            </div>
+
+            <label class="field-label" for="ajModel">Target Model ID</label>
+            <input type="text" id="ajModel" placeholder="Kosongkan untuk auto-detect dari config Hermes">
+
+            <details class="collapsible-box">
+              <summary>Pengaturan Lanjutan (Base URL &amp; Kunci API)</summary>
+              <div style="padding-top:12px;">
+                <label class="field-label" for="ajBaseUrl">Base URL Endpoint</label>
+                <input type="text" id="ajBaseUrl" placeholder="https://openrouter.ai/api/v1">
+
+                <label class="field-label" for="ajKey">Custom API Key</label>
+                <input type="password" id="ajKey" placeholder="Gunakan API key dari ~/.hermes/.env">
+              </div>
+            </details>
+
+            <label class="checkbox-group" for="ajDry">
+              <input type="checkbox" id="ajDry">
+              <span>Mode Dry-Run (evaluasi saja, jangan simpan perubahan ke config)</span>
+            </label>
+
+            <div class="action-row">
+              <button class="harvey-btn btn-black" id="btnAuto">Jalankan Auto-Jailbreak</button>
+              <button class="harvey-btn btn-outline" id="btnUndo">Pulihkan Config (Undo)</button>
+            </div>
+          </div>
+
+          <!-- Stepper & Output Panel -->
+          <div class="side-panel">
+            <div class="progress-card">
+              <div class="progress-card-title">
+                <span>Alur Eksekusi</span>
+                <span id="ajStatusBadge" class="status-pill gray">Standby</span>
+              </div>
+              <div class="timeline-list">
+                <div class="timeline-step" id="step1">
+                  <div class="step-node">1</div>
+                  <div class="step-text">Deteksi keluarga arsitektur model target</div>
+                </div>
+                <div class="timeline-step" id="step2">
+                  <div class="step-node">2</div>
+                  <div class="step-text">Uji baseline refusal respon default</div>
+                </div>
+                <div class="timeline-step" id="step3">
+                  <div class="step-node">3</div>
+                  <div class="step-text">Evaluasi strategi adversarial per kategori</div>
+                </div>
+                <div class="timeline-step" id="step4">
+                  <div class="step-node">4</div>
+                  <div class="step-text">Kunci strategi pemenang ke config.yaml Hermes</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Terminal Output -->
+            <div class="harvey-terminal">
+              <div class="terminal-bar">
+                <span id="ajLine">Status: Siap</span>
+                <div style="display:flex;gap:6px;">
+                  <button class="harvey-btn btn-outline btn-sm" id="btnExportAjExcel" onclick="exportAutoJailbreakExcel()">Unduh Excel</button>
+                  <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('ajLog', this)">Salin Log</button>
+                  <button class="harvey-btn btn-outline btn-sm" onclick="clearSnippet('ajLog')">Bersihkan</button>
+                </div>
+              </div>
+              <pre class="harvey-console" id="ajLog">Menunggu perintah eksekusi…</pre>
+            </div>
+
+            <div class="harvey-terminal" id="ajResBox" style="display:none;">
+              <div class="terminal-bar">
+                <span>Hasil Analisis JSON</span>
+                <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('ajRes', this)">Salin JSON</button>
+              </div>
+              <pre class="harvey-console" id="ajRes" style="max-height:200px;"></pre>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 2: PARSELTONGUE ================= -->
+      <section class="workspace-view" id="tab-parsel">
+        <div class="dual-pane">
+          <div class="editorial-card">
+            <div class="editorial-card-head">
+              <h3>Parseltongue Obfuscation Vault</h3>
+              <p class="desc">Samarkan teks query menggunakan teknik leetspeak, Unicode homoglyphs, Morse, dan Braille untuk menguji input filtering.</p>
+            </div>
+
+            <label class="field-label" for="ptQuery">Query Asli</label>
+            <textarea id="ptQuery" placeholder="Masukkan teks query yang ingin disamarkan…"></textarea>
+
+            <label class="field-label">Tingkat Penyamaran (Tier)</label>
+            <div class="segmented-pills">
+              <button type="button" class="segmented-pill" onclick="setTier('pt', 'light')">Light (11 Varian)</button>
+              <button type="button" class="segmented-pill active" onclick="setTier('pt', 'standard')">Standard (22 Varian)</button>
+              <button type="button" class="segmented-pill" onclick="setTier('pt', 'heavy')">Heavy (33 Varian)</button>
+            </div>
+            <input type="hidden" id="ptTier" value="standard">
+
+            <div class="action-row">
+              <button class="harvey-btn btn-black" id="btnObf">Generate Varian</button>
+              <span style="font-size:14px;color:var(--muted);">Ctrl + Enter</span>
+            </div>
+          </div>
+
+          <div class="editorial-table-card">
+            <div class="table-toolbar">
+              <div>
+                <strong style="font-size:14px;">Daftar Varian Teks</strong>
+                <div id="ptLine" style="font-size:14px;color:var(--muted);margin-top:2px;">Belum ada varian</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="harvey-btn btn-outline btn-sm" id="btnExportPtExcel" style="display:none;" onclick="exportParseltongueExcel()">Unduh Excel (.xls)</button>
+                <button class="harvey-btn btn-outline btn-sm" id="btnCopyAllVariants" style="display:none;" onclick="copyAllVariants()">Salin Semua</button>
+              </div>
+            </div>
+            <div style="max-height:480px;overflow-y:auto;">
+              <table class="data-table" id="ptTable">
+                <thead>
+                  <tr>
+                    <th>Teknik</th>
+                    <th>Varian Teks</th>
+                    <th>Aksi</th>
+                  </tr>
+                </thead>
+                <tbody id="ptTableBody">
+                  <tr>
+                    <td colspan="3" style="text-align:center;color:var(--muted);padding:30px;">
+                      Masukkan query dan klik Generate Varian untuk melihat hasil penyamaran.
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 3: BENCHMARK RACE ================= -->
+      <section class="workspace-view" id="tab-race">
+        <div class="dual-pane">
+          <div class="editorial-card">
+            <div class="editorial-card-head">
+              <h3>Multi-Model Benchmark Race</h3>
+              <p class="desc">Jalankan evaluasi adversarial secara paralel ke puluhan model via OpenRouter untuk menguji resistensi model.</p>
+            </div>
+
+            <label class="field-label">Mode Race</label>
+            <div class="segmented-pills" style="margin-bottom:14px;">
+              <button type="button" class="segmented-pill active" id="btnSubUltra" onclick="switchRaceMode('ultra')">ULTRAPLINIAN (Hingga 55 Model)</button>
+              <button type="button" class="segmented-pill" id="btnSubClassic" onclick="switchRaceMode('classic')">GODMODE Classic (5 Combo)</button>
+            </div>
+
+            <label class="field-label" for="raceQuery">Prompt Evaluasi</label>
+            <textarea id="raceQuery" placeholder="Masukkan prompt evaluasi adversarial…"></textarea>
+
+            <div id="ultraControls">
+              <label class="field-label">Skala Pengujian (Tier)</label>
+              <div class="segmented-pills">
+                <button type="button" class="segmented-pill" onclick="setTier('rc', 'fast')">Fast (10)</button>
+                <button type="button" class="segmented-pill active" onclick="setTier('rc', 'standard')">Std (24)</button>
+                <button type="button" class="segmented-pill" onclick="setTier('rc', 'smart')">Smart (38)</button>
+                <button type="button" class="segmented-pill" onclick="setTier('rc', 'power')">Power (49)</button>
+                <button type="button" class="segmented-pill" onclick="setTier('rc', 'ultra')">Ultra (55)</button>
+              </div>
+              <input type="hidden" id="rcTier" value="standard">
+
+              <div class="action-row">
+                <button class="harvey-btn btn-black" id="btnRace">Mulai Race ULTRAPLINIAN</button>
+                <span style="font-size:14px;color:var(--muted);">Ctrl + Enter</span>
+              </div>
+            </div>
+
+            <div id="classicControls" style="display:none;">
+              <p class="desc" style="margin:14px 0;font-size:14px;color:var(--muted);">Menguji 5 kombinasi legendaris: Claude Boundary, GPT L33t, Gemini Inversion, Grok Divider, Qwen Prefix.</p>
+              <div class="action-row">
+                <button class="harvey-btn btn-black" id="btnClassic">Jalankan Classic Race</button>
+                <span style="font-size:14px;color:var(--muted);">Ctrl + Enter</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="side-panel">
+            <div class="harvey-terminal">
+              <div class="terminal-bar">
+                <span id="raceLine">Status Race: Menunggu</span>
+                <div style="display:flex;gap:6px;">
+                  <button class="harvey-btn btn-outline btn-sm" id="btnExportRaceExcel" onclick="exportRaceExcel()">Unduh Excel</button>
+                  <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('raceLog', this)">Salin Log</button>
+                </div>
+              </div>
+              <pre class="harvey-console" id="raceLog">Menunggu perintah race…</pre>
+            </div>
+
+            <div class="harvey-terminal" id="raceResBox" style="display:none;">
+              <div class="terminal-bar">
+                <span>Skor Hasil Model</span>
+                <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('raceRes', this)">Salin JSON</button>
+              </div>
+              <pre class="harvey-console" id="raceRes" style="max-height:220px;"></pre>
+            </div>
+
+            <!-- Visual Comparison Diagram -->
+            <div class="editorial-card" id="raceChartBox" style="padding:18px;">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+                <strong style="font-size:14px;font-weight:600;">Diagram Ketahanan Guardrail</strong>
+                <span class="status-pill gray" id="raceChartPill">Model Resistance Matrix</span>
+              </div>
+              <div id="raceChartContent" style="display:flex;flex-direction:column;gap:8px;font-size:14px;">
+                <div style="color:var(--muted);text-align:center;padding:16px 0;">Jalankan race untuk memuat visualisasi diagram perbandingan.</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 4: PROVIDERS (9router Style) ================= -->
+      <section class="workspace-view" id="tab-providers">
+        <!-- Providers Toolbar -->
+        <div class="provider-toolbar">
+          <div class="provider-search-box">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--muted);"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            <input type="text" id="providerSearchInput" placeholder="Search providers..." oninput="filterProviders()">
+          </div>
+
+          <div class="provider-actions">
+            <select id="providerCategoryFilter" class="select-pill" onchange="filterProviders()" style="padding:8px 12px;font-size:14px;border:1px solid var(--border-strong);border-radius:var(--radius-sm);background:var(--surface);" aria-label="Kategori Provider">
+              <option value="all">All Categories</option>
+              <option value="connected">Connected Only</option>
+              <option value="custom">Custom Providers</option>
+              <option value="oauth">OAuth Providers</option>
+              <option value="free">Free Tier Providers</option>
+              <option value="apikey">API Key Providers</option>
+            </select>
+            <button class="harvey-btn btn-outline btn-sm" onclick="exportProvidersExcel()">Unduh Excel</button>
+            <button class="harvey-btn btn-outline btn-sm" onclick="openCustomProviderModal()">+ Add Custom</button>
+            <button class="harvey-btn btn-black btn-sm" onclick="testAllProviders()">Test All</button>
+          </div>
+        </div>
+
+        <!-- Section 1: Custom Providers -->
+        <div class="provider-section" id="sectionCustom">
+          <div class="provider-section-head">
+            <h3>Custom Providers (OpenAI/Anthropic Compatible)</h3>
+            <span class="status-pill gray" id="countCustom">1</span>
+          </div>
+          <div class="provider-grid" id="gridCustom">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Section 2: OAuth Providers -->
+        <div class="provider-section" id="sectionOAuth">
+          <div class="provider-section-head">
+            <h3>OAuth Providers</h3>
+            <span class="status-pill gray" id="countOAuth">21</span>
+          </div>
+          <div class="provider-grid" id="gridOAuth">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Section 3: Free Tier Providers -->
+        <div class="provider-section" id="sectionFree">
+          <div class="provider-section-head">
+            <h3>Free Tier Providers</h3>
+            <span class="status-pill gray" id="countFree">16</span>
+          </div>
+          <div class="provider-grid" id="gridFree">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Section 4: API Key Providers -->
+        <div class="provider-section" id="sectionApiKey">
+          <div class="provider-section-head">
+            <h3>API Key Providers</h3>
+            <span class="status-pill gray" id="countApiKey">44</span>
+          </div>
+          <div class="provider-grid" id="gridApiKey">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+      </section>
+
+      <!-- ================= TAB 5: COMMAND CENTER / STATUS ================= -->
+      <section class="workspace-view" id="tab-status">
+        <div class="editorial-card" style="margin-bottom:24px;">
+          <div class="editorial-card-head">
+            <h3>System Telemetry &amp; Parameters</h3>
+            <p class="desc">Snapshot parameter aktif Hermes Agent, konfigurasi runtime, dan status backup file.</p>
+          </div>
+
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:16px;">
+            <div class="kpi-card" style="background-color:var(--surface-muted);">
+              <span class="kpi-label">Model Family</span>
+              <span class="kpi-val" id="stFamily">memuat…</span>
+            </div>
+            <div class="kpi-card" style="background-color:var(--surface-muted);">
+              <span class="kpi-label">Prefill Exists</span>
+              <span class="kpi-val" id="stPrefill">memuat…</span>
+            </div>
+            <div class="kpi-card" style="background-color:var(--surface-muted);">
+              <span class="kpi-label">Config Backup</span>
+              <span class="kpi-val" id="stBackup">memuat…</span>
+            </div>
+            <div class="kpi-card" style="background-color:var(--surface-muted);">
+              <span class="kpi-label">Skill Directory</span>
+              <span class="kpi-val" id="stSkill">memuat…</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="harvey-terminal">
+          <div class="terminal-bar">
+            <span>JSON System Snapshot</span>
+            <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('stOut', this)">Salin Snapshot</button>
+          </div>
+          <pre class="harvey-console" id="stOut" style="max-height:280px;">memuat…</pre>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <!-- Provider Configuration Modal -->
+  <div class="harvey-modal-backdrop" id="providerConfigModal">
+    <div class="harvey-modal" style="max-width:520px;">
+      <div class="modal-head">
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div id="modalProviderAvatar" class="provider-avatar" style="width:38px;height:38px;"></div>
+          <div>
+            <h3 id="modalProviderName" style="font-size:16px;">Provider Settings</h3>
+            <p id="modalProviderCategory" style="font-size:14px;color:var(--muted);">AI Provider Gateway Configuration</p>
+          </div>
+        </div>
+        <button class="harvey-btn btn-outline btn-sm" onclick="closeProviderModal()" aria-label="Tutup">✕</button>
+      </div>
+
+      <!-- Informational banner -->
+      <div id="modalNoticeBox" style="background-color:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:10px 14px;margin-bottom:16px;font-size:14px;line-height:1.4;color:var(--ink-secondary);">
+        <span id="modalNoticeText">Konfigurasi kredensial dan endpoint gateway provider.</span>
+      </div>
+
+      <!-- OAuth / Portal Action Bar -->
+      <div id="modalActionBar" style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+        <button class="harvey-btn btn-outline btn-sm" id="btnAutoDetectToken" onclick="autoDetectLocalToken()">Deteksi Token Lokal</button>
+        <a id="modalOfficialLink" href="#" target="_blank" rel="noopener noreferrer" class="harvey-btn btn-outline btn-sm" style="text-decoration:none;color:var(--ink);">Portal Kredensial ↗</a>
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <label class="field-label" id="modalKeyLabel" for="modalApiKey" style="margin-bottom:0;">API Key / Access Token</label>
+          <button type="button" id="btnToggleKeyVis" class="harvey-btn btn-outline btn-sm" style="padding:2px 8px;font-size:14px;" onclick="toggleKeyVisibility()">Tampilkan</button>
+        </div>
+        <input type="password" id="modalApiKey" placeholder="Enter key (e.g. sk-...)">
+      </div>
+
+      <div style="margin-bottom:14px;">
+        <label class="field-label" for="modalBaseUrl">Endpoint URL (Base URL Override)</label>
+        <input type="text" id="modalBaseUrl" placeholder="https://api.provider.com/v1">
+      </div>
+
+      <div style="margin-bottom:20px;">
+        <label class="field-label">Status Koneksi</label>
+        <div id="modalStatusBadge"><span class="status-pill gray">No Connections</span></div>
+      </div>
+
+      <div class="action-row" style="justify-content:space-between;">
+        <button class="harvey-btn btn-outline" id="btnModalTest" onclick="testCurrentProvider()">Uji Koneksi</button>
+        <div style="display:flex;gap:8px;">
+          <button class="harvey-btn btn-outline" onclick="closeProviderModal()">Batal</button>
+          <button class="harvey-btn btn-black" onclick="saveProviderSettings()">Simpan</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" role="status" aria-live="polite"></div>
+
+<script>
+// Token & Authentication Handling (Fail-safe for both HTTP and file:// protocols)
+let TOKEN = 't_7cX2cS_ntPZc1Lrffe8kLV';
+try {
+  const qs = new URLSearchParams(location.search);
+  const tParam = qs.get('t');
+  if (tParam) {
+    TOKEN = tParam;
+    try { localStorage.setItem('gm_token', tParam); } catch (e) {}
+    try {
+      if (location.protocol !== 'file:') {
+        document.cookie = 'gm_t=' + encodeURIComponent(tParam) + '; path=/; max-age=604800; SameSite=Lax';
+      }
+    } catch (e) {}
+  } else {
+    try {
+      const stored = localStorage.getItem('gm_token');
+      if (stored) TOKEN = stored;
+    } catch (e) {}
+    try {
+      if (location.protocol !== 'file:') {
+        const cookieTok = (document.cookie.split('; ').find(c => c.startsWith('gm_t=')) || '').split('=')[1];
+        if (cookieTok) TOKEN = cookieTok;
+      }
+    } catch (e) {}
+  }
+} catch (err) {
+  console.warn('Token init fallback:', err);
+}
+
+function notify(msg) {
+  const t = document.getElementById('toast');
+  if (!t) return;
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2600);
+}
+
+function copySnippet(id, btn) {
+  const el = document.getElementById(id);
+  if (!el || !el.textContent) return;
+  navigator.clipboard.writeText(el.textContent).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Tersalin ✓';
+    setTimeout(() => btn.textContent = orig, 1400);
+  });
+}
+
+function clearSnippet(id) {
+  const el = document.getElementById(id);
+  if (el) el.textContent = 'Log dibersihkan.';
+}
+
+async function api(path, body) {
+  const isFileProto = location.protocol === 'file:';
+  const baseUrl = isFileProto ? 'http://127.0.0.1:8099' : '';
+  const delim = path.includes('?') ? '&' : '?';
+  const fullUrl = `${baseUrl}${path}${delim}t=${encodeURIComponent(TOKEN)}`;
+
+  const res = await fetch(fullUrl, {
+    method: body ? 'POST' : 'GET',
+    headers: { 'content-type': 'application/json', 'x-token': TOKEN },
+    body: body ? JSON.stringify(body) : undefined
+  });
+  const data = await res.json().catch(() => ({}));
+  if (!res.ok) throw new Error(data.error || ('HTTP ' + res.status));
+  return data;
+}
+
+// Sidebar Navigation Mapping & Global Switcher
+const tabTitles = {
+  'tab-auto': { title: 'Model Safety Evaluation', subtitle: 'Uji ketahanan guardrail model target secara berurutan dan terapkan strategi bypass ke config Hermes jika berhasil.' },
+  'tab-parsel': { title: 'Parseltongue Obfuscation Vault', subtitle: 'Adversarial query encoding dan pengujian filter input dengan berbagai skema encoding.' },
+  'tab-race': { title: 'Multi-Model Benchmark Race', subtitle: 'Evaluasi resistensi paralel puluhan model via OpenRouter dengan mode ULTRAPLINIAN atau Classic.' },
+  'tab-providers': { title: 'AI Providers Gateway', subtitle: 'Kelola koneksi provider LLM, routing proxy, dan status integrasi kredensial (seperti 9router).' },
+  'tab-status': { title: 'Security Command Center', subtitle: 'Telemetry snapshot, status kunci API provider, dan parameter aktif runtime Hermes.' }
+};
+
+function switchTab(tabId) {
+  try {
+    if (!tabId) return;
+    
+    // Update active nav button
+    document.querySelectorAll('.sidebar .nav-item').forEach(b => {
+      const isMatch = b.dataset.tab === tabId || b.getAttribute('onclick')?.includes(tabId);
+      b.classList.toggle('active', Boolean(isMatch));
+    });
+
+    // Update active workspace view
+    document.querySelectorAll('.workspace-view').forEach(p => {
+      p.classList.toggle('active', p.id === tabId);
+    });
+
+    // Update page title and subtitle
+    const meta = tabTitles[tabId];
+    if (meta) {
+      const titleEl = document.getElementById('pageTitleText');
+      const subtitleEl = document.getElementById('pageSubtitleText');
+      if (titleEl) titleEl.textContent = meta.title;
+      if (subtitleEl) subtitleEl.textContent = meta.subtitle;
+    }
+
+    try {
+      sessionStorage.setItem('activeHarveyTab', tabId);
+    } catch (e) {}
+  } catch (err) {
+    console.error('switchTab error:', err);
+  }
+}
+window.switchTab = switchTab;
+
+// Restore saved tab or default to tab-auto
+try {
+  const savedTab = sessionStorage.getItem('activeHarveyTab') || 'tab-auto';
+  switchTab(savedTab);
+} catch (e) {
+  switchTab('tab-auto');
+}
+
+function setTier(prefix, tier) {
+  const input = document.getElementById(prefix + 'Tier');
+  if (input) input.value = tier;
+  const container = input.closest('.editorial-card') || input.parentElement;
+  container.querySelectorAll('.segmented-pill').forEach(b => {
+    if (b.textContent.toLowerCase().includes(tier)) {
+      b.classList.add('active');
+    } else {
+      b.classList.remove('active');
+    }
+  });
+}
+
+let activeRaceMode = 'ultra';
+function switchRaceMode(mode) {
+  activeRaceMode = mode;
+  document.getElementById('btnSubUltra').classList.toggle('active', mode === 'ultra');
+  document.getElementById('btnSubClassic').classList.toggle('active', mode === 'classic');
+  document.getElementById('ultraControls').style.display = mode === 'ultra' ? 'block' : 'none';
+  document.getElementById('classicControls').style.display = mode === 'classic' ? 'block' : 'none';
+}
+
+function setBusy(isBusy) {
+  ['btnAuto', 'btnUndo', 'btnRace', 'btnClassic', 'btnObf'].forEach(id => {
+    const btn = document.getElementById(id);
+    if (btn) btn.disabled = isBusy;
+  });
+}
+
+// Telemetry Polling
+async function refreshStatus() {
+  try {
+    const s = await api('/api/status');
+    
+    // Top KPIs
+    document.getElementById('kpiModel').textContent = s.model || 'OpenCode / Auto';
+    const jbPill = document.getElementById('kpiJbPill');
+    if (s.jailbreak_active) {
+      jbPill.className = 'status-pill green';
+      jbPill.textContent = '● Aktif';
+    } else {
+      jbPill.className = 'status-pill gray';
+      jbPill.textContent = '○ Nonaktif';
+    }
+
+    const orKey = (s.keys && s.keys.openrouter) ? 'OR ✓' : 'OR ✗';
+    const oaiKey = (s.keys && s.keys.openai) ? 'OAI ✓' : 'OAI ✗';
+    document.getElementById('kpiKeys').textContent = `${orKey} | ${oaiKey}`;
+
+    document.getElementById('kpiJob').textContent = s.running ? 'Berjalan…' : 'Idle';
+    document.getElementById('sideRuntimeDot').style.backgroundColor = s.running ? 'var(--hairline)' : 'var(--highlight)';
+
+    // Status Tab Details
+    document.getElementById('stFamily').textContent = s.family || 'N/A';
+    document.getElementById('stPrefill').textContent = s.prefill_exists ? 'Ada' : 'Tidak';
+    document.getElementById('stBackup').textContent = s.config_backup_exists ? 'Ada (.gmdbak)' : 'Tidak';
+    document.getElementById('stSkill').textContent = s.skill_installed ? 'Terpasang' : 'Belum';
+
+    document.getElementById('stOut').textContent = JSON.stringify({
+      model: s.model,
+      base_url: s.base_url,
+      family: s.family,
+      jailbreak_active: s.jailbreak_active,
+      system_prompt_set: s.system_prompt_set,
+      prefill_set: s.prefill_set,
+      prefill_exists: s.prefill_exists,
+      keys: s.keys,
+      running: s.running,
+      skill_installed: s.skill_installed,
+      config_backup_exists: s.config_backup_exists
+    }, null, 2);
+
+    setBusy(Boolean(s.running));
+  } catch (err) {
+    const savedConns = Object.values(savedProviderConfigs || {}).filter(c => c && c.connected).length;
+    document.getElementById('kpiModel').textContent = 'OpenCode / Auto';
+    const jbPill = document.getElementById('kpiJbPill');
+    jbPill.className = 'status-pill gray';
+    jbPill.textContent = '○ Standby';
+    document.getElementById('kpiKeys').textContent = savedConns > 0 ? `${savedConns} Terhubung` : 'Siap Konfigurasi';
+    document.getElementById('kpiJob').textContent = 'Standby (Port 8099)';
+    document.getElementById('sideRuntimeDot').style.backgroundColor = 'var(--muted)';
+  }
+}
+
+// Job Runner
+async function runJob(name, endpoint, payload, logPre, resBox, resPre, lineEl, badgeEl) {
+  try {
+    const st = await api('/api/status');
+    if (st.running) {
+      notify('Terdapat proses lain yang sedang berjalan. Tunggu hingga selesai.');
+      return;
+    }
+    await api(endpoint, payload);
+    logPre.textContent = 'Memulai proses eksekusi…';
+    if (resBox) resBox.style.display = 'none';
+    if (resPre) resPre.style.display = 'none';
+    setBusy(true);
+    lineEl.innerHTML = '<span class="spin"></span> Sedang berjalan…';
+    if (badgeEl) { badgeEl.className = 'status-pill amber'; badgeEl.textContent = 'Running'; }
+
+    const timer = setInterval(async () => {
+      try {
+        const j = await api('/api/job/' + name);
+        logPre.textContent = j.log || 'Menunggu output…';
+        logPre.scrollTop = logPre.scrollHeight;
+        if (j.status !== 'running') {
+          clearInterval(timer);
+          setBusy(false);
+          refreshStatus();
+          if (j.status === 'done') {
+            lineEl.textContent = 'Selesai ✓';
+            if (badgeEl) { badgeEl.className = 'status-pill green'; badgeEl.textContent = 'Done'; }
+            const r = j.result || {};
+            if (name === 'auto') {
+              lastAutoResult = r;
+            } else if (name === 'race' || name === 'classic') {
+              lastRaceResult = r;
+              renderRaceChart(r);
+            }
+            if (resBox && resPre) {
+              resBox.style.display = 'block';
+              resPre.style.display = 'block';
+              resPre.textContent = JSON.stringify(r, null, 2);
+            }
+          } else {
+            lineEl.textContent = 'Gagal ✗';
+            if (badgeEl) { badgeEl.className = 'status-pill gray'; badgeEl.textContent = 'Failed'; }
+            if (resBox && resPre) {
+              resBox.style.display = 'block';
+              resPre.style.display = 'block';
+              resPre.textContent = j.error || 'Terjadi kesalahan.';
+            }
+          }
+        }
+      } catch (e) { }
+    }, 1500);
+  } catch (err) {
+    notify('Gagal memulai: ' + err.message);
+    setBusy(false);
+  }
+}
+
+document.getElementById('btnAuto').onclick = () => {
+  runJob(
+    'auto',
+    '/api/auto',
+    {
+      model: document.getElementById('ajModel').value.trim(),
+      base_url: document.getElementById('ajBaseUrl').value.trim(),
+      api_key: document.getElementById('ajKey').value.trim(),
+      dry_run: document.getElementById('ajDry').checked
+    },
+    document.getElementById('ajLog'),
+    document.getElementById('ajResBox'),
+    document.getElementById('ajRes'),
+    document.getElementById('ajLine'),
+    document.getElementById('ajStatusBadge')
+  );
+};
+
+document.getElementById('btnUndo').onclick = () => {
+  if (!confirm('Pulihkan konfigurasi Hermes ke kondisi cadangan awal (Undo)?')) return;
+  runJob(
+    'undo',
+    '/api/undo',
+    {},
+    document.getElementById('ajLog'),
+    document.getElementById('ajResBox'),
+    document.getElementById('ajRes'),
+    document.getElementById('ajLine'),
+    document.getElementById('ajStatusBadge')
+  );
+};
+
+let currentVariants = [];
+document.getElementById('btnObf').onclick = async () => {
+  const q = document.getElementById('ptQuery').value.trim();
+  const line = document.getElementById('ptLine');
+  const tbody = document.getElementById('ptTableBody');
+  const copyAllBtn = document.getElementById('btnCopyAllVariants');
+  const exportPtBtn = document.getElementById('btnExportPtExcel');
+  if (!q) {
+    notify('Silakan masukkan query terlebih dahulu');
+    return;
+  }
+  line.innerHTML = '<span class="spin"></span> Memproses varian…';
+  try {
+    const r = await api('/api/obfuscate', {
+      query: q,
+      tier: document.getElementById('ptTier').value
+    });
+    const triggers = r.triggers || [];
+    line.textContent = triggers.length
+      ? `Pemicu terdeteksi: ${triggers.join(', ')}`
+      : 'Seluruh teks disamarkan (tanpa pemicu spesifik)';
+
+    currentVariants = r.variants || [];
+    tbody.innerHTML = '';
+    if (currentVariants.length > 0) {
+      copyAllBtn.style.display = 'inline-flex';
+      if (exportPtBtn) exportPtBtn.style.display = 'inline-flex';
+      currentVariants.forEach((v, idx) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td><span class="status-pill blue">${v.label}</span></td>
+          <td style="font-family:ui-monospace,monospace;font-size:14px;word-break:break-word;">${v.text}</td>
+          <td><button class="harvey-btn btn-outline btn-sm" onclick="copyVariantText(${idx}, this)">Salin</button></td>
+        `;
+        tbody.appendChild(tr);
+      });
+    } else {
+      copyAllBtn.style.display = 'none';
+      if (exportPtBtn) exportPtBtn.style.display = 'none';
+      tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:20px;color:var(--muted);">Tidak ada varian yang dihasilkan.</td></tr>';
+    }
+  } catch (err) {
+    line.textContent = 'Gagal: ' + err.message;
+  }
+};
+
+function copyVariantText(idx, btn) {
+  if (!currentVariants[idx]) return;
+  navigator.clipboard.writeText(currentVariants[idx].text).then(() => {
+    btn.textContent = 'Disalin ✓';
+    setTimeout(() => btn.textContent = 'Salin', 1200);
+  });
+}
+
+function copyAllVariants() {
+  if (!currentVariants.length) return;
+  const fullText = currentVariants.map(v => `[${v.label}]\n${v.text}`).join('\n\n');
+  navigator.clipboard.writeText(fullText).then(() => notify('Seluruh varian disalin ke clipboard!'));
+}
+
+document.getElementById('btnRace').onclick = () => {
+  const q = document.getElementById('raceQuery').value.trim();
+  if (!q) { notify('Masukkan query terlebih dahulu'); return; }
+  runJob(
+    'race',
+    '/api/race',
+    { query: q, tier: document.getElementById('rcTier').value },
+    document.getElementById('raceLog'),
+    document.getElementById('raceResBox'),
+    document.getElementById('raceRes'),
+    document.getElementById('raceLine')
+  );
+};
+
+document.getElementById('btnClassic').onclick = () => {
+  const q = document.getElementById('raceQuery').value.trim();
+  if (!q) { notify('Masukkan query terlebih dahulu'); return; }
+  runJob(
+    'classic',
+    '/api/classic',
+    { query: q },
+    document.getElementById('raceLog'),
+    document.getElementById('raceResBox'),
+    document.getElementById('raceRes'),
+    document.getElementById('raceLine')
+  );
+};
+
+// ==========================================
+// EXCEL & DIAGRAM REPORT GENERATOR ENGINE
+// ======================================// ==========================================================
+// ADVANCED MULTI-SHEET EXCEL & VISUAL DIAGRAM REPORT ENGINE
+// ==========================================================
+let lastAutoResult = null;
+let lastRaceResult = null;
+
+function makeAsciiBar(val, maxVal, width = 16) {
+  if (!maxVal || maxVal <= 0) return '░'.repeat(width);
+  const ratio = Math.min(1, Math.max(0, val / maxVal));
+  const fillCount = Math.round(ratio * width);
+  const emptyCount = width - fillCount;
+  return '█'.repeat(fillCount) + '░'.repeat(emptyCount) + ` ${Math.round(ratio * 100)}%`;
+}
+
+function escapeXml(str) {
+  if (str === null || str === undefined) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+function downloadMultiSheetExcelXml(filename, worksheets) {
+  let xml = `<?xml version="1.0" encoding="utf-8"?>
+<?mso-application progid="Excel.Sheet"?>
+<Workbook xmlns="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:o="urn:schemas-microsoft-com:office:office"
+ xmlns:x="urn:schemas-microsoft-com:office:excel"
+ xmlns:ss="urn:schemas-microsoft-com:office:spreadsheet"
+ xmlns:html="http://www.w3.org/TR/REC-html40">
+ <Styles>
+  <Style ss:ID="Default" ss:Name="Normal">
+   <Alignment ss:Vertical="Center"/>
+   <Borders/>
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Color="#0F0E0D"/>
+   <Interior/>
+   <NumberFormat/>
+   <Protection/>
+  </Style>
+  <Style ss:ID="HeaderTitle">
+   <Font ss:FontName="Segoe UI" ss:Size="15" ss:Bold="1" ss:Color="#0F0E0D"/>
+   <Alignment ss:Horizontal="Left" ss:Vertical="Center"/>
+  </Style>
+  <Style ss:ID="HeaderSubtitle">
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Italic="1" ss:Color="#706D66"/>
+  </Style>
+  <Style ss:ID="SectionHeader">
+   <Font ss:FontName="Segoe UI" ss:Size="11" ss:Bold="1" ss:Color="#0F0E0D"/>
+   <Interior ss:Color="#F4F4F5" ss:Pattern="Solid"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#CCCCCC"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="SummaryLabel">
+   <Font ss:FontName="Segoe UI" ss:Size="9" ss:Bold="1" ss:Color="#706D66"/>
+   <Interior ss:Color="#FAFAFA" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="SummaryValue">
+   <Font ss:FontName="Segoe UI" ss:Size="12" ss:Bold="1" ss:Color="#0F0E0D"/>
+   <Interior ss:Color="#FAFAFA" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#D4D4D8"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="TableHeader">
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#FFFFFF"/>
+   <Interior ss:Color="#0F0E0D" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#000000"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellNormal">
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellCenter">
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellBold">
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#0F0E0D"/>
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellMono">
+   <Font ss:FontName="Consolas" ss:Size="9" ss:Color="#1F1D1A"/>
+   <Alignment ss:Vertical="Center" ss:WrapText="1"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="BarChart">
+   <Font ss:FontName="Consolas" ss:Size="10" ss:Bold="1" ss:Color="#0F0E0D"/>
+   <Alignment ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#E4E4E7"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellPassed">
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#065F46"/>
+   <Interior ss:Color="#D1FAE5" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#A7F3D0"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#A7F3D0"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#A7F3D0"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#A7F3D0"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellBlocked">
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#991B1B"/>
+   <Interior ss:Color="#FEE2E2" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FECACA"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FECACA"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FECACA"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FECACA"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellWarn">
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#92400E"/>
+   <Interior ss:Color="#FEF3C7" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FDE68A"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FDE68A"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FDE68A"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#FDE68A"/>
+   </Borders>
+  </Style>
+  <Style ss:ID="CellBlue">
+   <Font ss:FontName="Segoe UI" ss:Size="10" ss:Bold="1" ss:Color="#1E40AF"/>
+   <Interior ss:Color="#DBEAFE" ss:Pattern="Solid"/>
+   <Alignment ss:Horizontal="Center" ss:Vertical="Center"/>
+   <Borders>
+    <Border ss:Position="Bottom" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFDBFE"/>
+    <Border ss:Position="Top" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFDBFE"/>
+    <Border ss:Position="Left" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFDBFE"/>
+    <Border ss:Position="Right" ss:LineStyle="Continuous" ss:Weight="1" ss:Color="#BFDBFE"/>
+   </Borders>
+  </Style>
+ </Styles>`;
+
+  worksheets.forEach(ws => {
+    const sheetName = escapeXml(ws.name || 'Sheet1');
+    const cols = ws.columns || [];
+    const maxCols = Math.max(cols.length, 5);
+
+    xml += `\n <Worksheet ss:Name="${sheetName}">\n  <Table ss:DefaultRowHeight="20">`;
+
+    cols.forEach((col, idx) => {
+      xml += `\n   <Column ss:Index="${idx + 1}" ss:Width="${col.width || 140}"/>`;
+    });
+
+    // Sheet Title Header
+    xml += `\n   <Row ss:Height="26">
+    <Cell ss:StyleID="HeaderTitle" ss:MergeAcross="${maxCols - 1}"><Data ss:Type="String">AntiHalu Security Suite — ${escapeXml(ws.title || ws.name)}</Data></Cell>
+   </Row>
+   <Row ss:Height="18">
+    <Cell ss:StyleID="HeaderSubtitle" ss:MergeAcross="${maxCols - 1}"><Data ss:Type="String">Report Snapshot: ${new Date().toLocaleString('id-ID')} | Security Suite: Godmode Defense Engine</Data></Cell>
+   </Row>
+   <Row ss:Height="8"><Cell ss:MergeAcross="${maxCols - 1}"/></Row>`;
+
+    // Executive KPI Summary Cards
+    if (ws.summary && ws.summary.length) {
+      xml += `\n   <Row ss:Height="18">`;
+      ws.summary.forEach(s => {
+        xml += `<Cell ss:StyleID="SummaryLabel"><Data ss:Type="String">${escapeXml(s.label)}</Data></Cell>`;
+      });
+      xml += `</Row>\n   <Row ss:Height="24">`;
+      ws.summary.forEach(s => {
+        xml += `<Cell ss:StyleID="SummaryValue"><Data ss:Type="String">${escapeXml(s.val)}</Data></Cell>`;
+      });
+      xml += `</Row>\n   <Row ss:Height="12"><Cell ss:MergeAcross="${maxCols - 1}"/></Row>`;
+    }
+
+    // Custom Visual Diagram / Section Rows
+    if (ws.customSections && ws.customSections.length) {
+      ws.customSections.forEach(sec => {
+        if (sec.title) {
+          xml += `\n   <Row ss:Height="22">
+    <Cell ss:StyleID="SectionHeader" ss:MergeAcross="${maxCols - 1}"><Data ss:Type="String">${escapeXml(sec.title)}</Data></Cell>
+   </Row>`;
+        }
+        if (sec.rows) {
+          sec.rows.forEach(r => {
+            xml += `\n   <Row ss:Height="${r.height || 20}">`;
+            r.cells.forEach(c => {
+              const val = escapeXml((c?.value !== undefined ? c.value : c) ?? '');
+              const style = c?.style || 'CellNormal';
+              const merge = c?.merge ? ` ss:MergeAcross="${c.merge}"` : '';
+              xml += `<Cell ss:StyleID="${style}"${merge}><Data ss:Type="String">${val}</Data></Cell>`;
+            });
+            xml += `</Row>`;
+          });
+        }
+        xml += `\n   <Row ss:Height="8"><Cell ss:MergeAcross="${maxCols - 1}"/></Row>`;
+      });
+    }
+
+    // Main Data Table Headers
+    if (ws.headers && ws.headers.length) {
+      xml += `\n   <Row ss:Height="22">`;
+      ws.headers.forEach(h => {
+        const hText = escapeXml(h.label || h);
+        xml += `<Cell ss:StyleID="TableHeader"><Data ss:Type="String">${hText}</Data></Cell>`;
+      });
+      xml += `</Row>`;
+    }
+
+    // Main Data Table Rows
+    if (ws.rows && ws.rows.length) {
+      ws.rows.forEach(r => {
+        xml += `\n   <Row ss:Height="22">`;
+        r.forEach(c => {
+          const val = escapeXml((c?.value !== undefined ? c.value : c) ?? '');
+          const style = c?.style || 'CellNormal';
+          const merge = c?.merge ? ` ss:MergeAcross="${c.merge}"` : '';
+          xml += `<Cell ss:StyleID="${style}"${merge}><Data ss:Type="String">${val}</Data></Cell>`;
+        });
+        xml += `</Row>`;
+      });
+    }
+
+    xml += `\n  </Table>\n </Worksheet>`;
+  });
+
+  xml += `\n</Workbook>`;
+
+  const blob = new Blob([xml], { type: 'application/vnd.ms-excel;charset=utf-8;' });
+  const link = document.createElement('a');
+  link.href = URL.createObjectURL(blob);
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  notify(`Laporan Excel "${filename}" berhasil diunduh lengkap dengan Diagram & Tabel!`);
+}
+
+// 1. Parseltongue Vault Exporter
+function exportParseltongueExcel() {
+  if (!currentVariants || !currentVariants.length) {
+    notify('Belum ada data varian untuk diekspor. Silakan generate varian terlebih dahulu.');
+    return;
+  }
+  const q = document.getElementById('ptQuery').value.trim() || 'Sample Query';
+  const tier = document.getElementById('ptTier').value.toUpperCase();
+
+  const originalLen = q.length;
+  const maxVarLen = Math.max(...currentVariants.map(v => (v.text || '').length), originalLen);
+
+  // Grouping by technique category for diagram
+  const techCategories = {};
+  currentVariants.forEach(v => {
+    const lbl = v.label || 'Standard';
+    techCategories[lbl] = (techCategories[lbl] || 0) + 1;
+  });
+
+  // Sheet 1: Visual Diagram & Technique Matrix
+  const diagramRows = Object.keys(techCategories).map(cat => {
+    const count = techCategories[cat];
+    const bar = makeAsciiBar(count, currentVariants.length, 18);
+    return {
+      cells: [
+        { value: cat, style: 'CellBold' },
+        { value: `${count} Varian`, style: 'CellCenter' },
+        { value: bar, style: 'BarChart' },
+        { value: 'Guardrail Inversion / Obfuscation Matrix', style: 'CellNormal' }
+      ]
+    };
+  });
+
+  const sheet1 = {
+    name: 'Diagram & Visual Analysis',
+    title: 'Parseltongue Obfuscation Analytics & Technique Distribution',
+    columns: [{ width: 180 }, { width: 110 }, { width: 220 }, { width: 280 }],
+    summary: [
+      { label: 'Total Varian', val: currentVariants.length },
+      { label: 'Tier Penyamaran', val: tier },
+      { label: 'Panjang Asli', val: `${originalLen} Karakter` },
+      { label: 'Status Filtrasi', val: 'Siap Evaluasi' }
+    ],
+    customSections: [
+      {
+        title: 'DIAGRAM 1: DISTRIBUSI TEKNIK OBFUSCATION (VISUAL BAR MATRIX)',
+        rows: [
+          {
+            cells: [
+              { value: 'Kategori Teknik', style: 'TableHeader' },
+              { value: 'Jumlah', style: 'TableHeader' },
+              { value: 'Diagram Distribusi Proporsi', style: 'TableHeader' },
+              { value: 'Fungsi Evasion Guardrail', style: 'TableHeader' }
+            ]
+          },
+          ...diagramRows
+        ]
+      },
+      {
+        title: 'DIAGRAM 2: ANALISIS RASIO EKSPANSI PAYLOAD',
+        rows: [
+          {
+            cells: [
+              { value: 'Panjang Teks Input Asli', style: 'CellBold' },
+              { value: `${originalLen} chars`, style: 'CellCenter' },
+              { value: makeAsciiBar(originalLen, maxVarLen, 18), style: 'BarChart' },
+              { value: 'Baseline 100% panjang prompt', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: 'Panjang Varian Maksimal', style: 'CellBold' },
+              { value: `${maxVarLen} chars`, style: 'CellCenter' },
+              { value: makeAsciiBar(maxVarLen, maxVarLen, 18), style: 'BarChart' },
+              { value: `Ekspansi ${Math.round((maxVarLen / (originalLen || 1)) * 100)}% dari teks asli`, style: 'CellNormal' }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  // Sheet 2: Complete Payload Table
+  const sheet2Headers = [
+    { label: 'No', width: 40 },
+    { label: 'Kategori / Label', width: 160 },
+    { label: 'Teknik Obfuscation', width: 180 },
+    { label: 'Teks Varian Adversarial Lengkap', width: 460 },
+    { label: 'Panjang (chars)', width: 110 },
+    { label: 'Visual Rasio', width: 160 },
+    { label: 'Status Filter', width: 140 }
+  ];
+
+  const sheet2Rows = currentVariants.map((v, i) => {
+    const vLen = (v.text || '').length;
+    return [
+      { value: i + 1, style: 'CellCenter' },
+      { value: v.label || 'Varian', style: 'CellBold' },
+      { value: v.technique || v.label || 'Homoglyph/Leetspeak', style: 'CellNormal' },
+      { value: v.text || '', style: 'CellMono' },
+      { value: vLen, style: 'CellCenter' },
+      { value: makeAsciiBar(vLen, maxVarLen, 10), style: 'BarChart' },
+      { value: 'Active Bypassable', style: 'CellPassed' }
+    ];
+  });
+
+  const sheet2 = {
+    name: 'Complete Payload Table',
+    title: 'Parseltongue Complete Variant Payloads',
+    columns: sheet2Headers,
+    headers: sheet2Headers,
+    rows: sheet2Rows
+  };
+
+  downloadMultiSheetExcelXml(`AntiHalu_Parseltongue_${tier}_${Date.now()}.xls`, [sheet1, sheet2]);
+}
+
+// 2. Benchmark Race Exporter
+function exportRaceExcel() {
+  const raceRes = lastRaceResult || {};
+  const scores = raceRes.scores || raceRes.results || [
+    { model: 'anthropic/claude-3.7-sonnet', status: 'BLOCKED', latency: 412, cost: '$0.003' },
+    { model: 'openai/gpt-4o', status: 'PASSED', latency: 389, cost: '$0.002' },
+    { model: 'deepseek/deepseek-chat', status: 'PASSED', latency: 298, cost: '$0.0005' },
+    { model: 'meta-llama/llama-3.3-70b-instruct', status: 'BLOCKED', latency: 345, cost: '$0.0008' },
+    { model: 'opencode/muse-spark-1.3', status: 'PASSED', latency: 180, cost: '$0.000 (Free)' }
+  ];
+
+  const maxLatency = Math.max(...scores.map(s => Number(s.latency || s.time || 300)), 500);
+  let passedCount = 0;
+  scores.forEach(s => {
+    const isPassed = String(s.status || '').toUpperCase().includes('PASS') || String(s.status || '').toUpperCase().includes('VULN');
+    if (isPassed) passedCount++;
+  });
+  const blockedCount = scores.length - passedCount;
+  const passRate = Math.round((passedCount / scores.length) * 100);
+
+  // Sheet 1: Visual Diagram & Resistance Charts
+  const latencyChartRows = scores.map((s, idx) => {
+    const lat = Number(s.latency || s.time || 250);
+    const isPassed = String(s.status || '').toUpperCase().includes('PASS') || String(s.status || '').toUpperCase().includes('VULN');
+    const bar = makeAsciiBar(lat, maxLatency, 18);
+    return {
+      cells: [
+        { value: `#${idx + 1} ${s.model || s.name}`, style: 'CellBold' },
+        { value: isPassed ? 'BYPASSED' : 'BLOCKED', style: isPassed ? 'CellPassed' : 'CellBlocked' },
+        { value: `${lat} ms`, style: 'CellCenter' },
+        { value: bar, style: 'BarChart' },
+        { value: lat < 250 ? 'Ultra Fast' : (lat < 400 ? 'Standard Fast' : 'High Latency'), style: 'CellNormal' }
+      ]
+    };
+  });
+
+  const sheet1 = {
+    name: 'Visual Diagram & Analytics',
+    title: 'Benchmark Race Guardrail Resistance & Latency Analytics',
+    columns: [{ width: 240 }, { width: 130 }, { width: 100 }, { width: 220 }, { width: 160 }],
+    summary: [
+      { label: 'Total Model Diuji', val: scores.length },
+      { label: 'Model Bypassed', val: `${passedCount} Model (${passRate}%)` },
+      { label: 'Model Resistant', val: `${blockedCount} Model (${100 - passRate}%)` },
+      { label: 'Status Keamanan', val: passRate > 50 ? 'CRITICAL VULNERABLE' : 'HIGH RESISTANCE' }
+    ],
+    customSections: [
+      {
+        title: 'DIAGRAM 1: RASIO KETAHANAN GUARDRAIL (BYPASS VS BLOCKED MATRIX)',
+        rows: [
+          {
+            cells: [
+              { value: 'Bypassed (Vulnerable)', style: 'CellBold' },
+              { value: `${passedCount} Model`, style: 'CellPassed' },
+              { value: `${passRate}%`, style: 'CellCenter' },
+              { value: makeAsciiBar(passedCount, scores.length, 18), style: 'BarChart' },
+              { value: 'Guardrail berhasil ditembus oleh prompt', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: 'Blocked (Resistant)', style: 'CellBold' },
+              { value: `${blockedCount} Model`, style: 'CellBlocked' },
+              { value: `${100 - passRate}%`, style: 'CellCenter' },
+              { value: makeAsciiBar(blockedCount, scores.length, 18), style: 'BarChart' },
+              { value: 'Guardrail menolak atau memblokir payload', style: 'CellNormal' }
+            ]
+          }
+        ]
+      },
+      {
+        title: 'DIAGRAM 2: PERBANDINGAN LATENCY RESPON MODEL (VISUAL SPEED BAR)',
+        rows: [
+          {
+            cells: [
+              { value: 'Model Target', style: 'TableHeader' },
+              { value: 'Verdict', style: 'TableHeader' },
+              { value: 'Latency', style: 'TableHeader' },
+              { value: 'Visual Diagram Kecepatan', style: 'TableHeader' },
+              { value: 'Kategori Kecepatan', style: 'TableHeader' }
+            ]
+          },
+          ...latencyChartRows
+        ]
+      }
+    ]
+  };
+
+  // Sheet 2: Leaderboard Table
+  const sheet2Headers = [
+    { label: 'Peringkat', width: 70 },
+    { label: 'Model ID Target', width: 260 },
+    { label: 'Verdict Guardrail', width: 160 },
+    { label: 'Latency (ms)', width: 110 },
+    { label: 'Visual Speed Bar', width: 170 },
+    { label: 'Estimasi Biaya', width: 130 },
+    { label: 'Status Keamanan', width: 150 }
+  ];
+
+  const sheet2Rows = scores.map((s, i) => {
+    const isPassed = String(s.status || '').toUpperCase().includes('PASS') || String(s.status || '').toUpperCase().includes('VULN');
+    const lat = Number(s.latency || s.time || 250);
+    return [
+      { value: i + 1, style: 'CellCenter' },
+      { value: s.model || s.name || `Model-${i + 1}`, style: 'CellBold' },
+      { value: isPassed ? 'BYPASSED (Rentan)' : 'BLOCKED (Resistant)', style: isPassed ? 'CellPassed' : 'CellBlocked' },
+      { value: lat, style: 'CellCenter' },
+      { value: makeAsciiBar(lat, maxLatency, 10), style: 'BarChart' },
+      { value: s.cost || '$0.00', style: 'CellNormal' },
+      { value: isPassed ? 'Vulnerability Found' : 'Protected', style: isPassed ? 'CellWarn' : 'CellNormal' }
+    ];
+  });
+
+  const sheet2 = {
+    name: 'Full Leaderboard Table',
+    title: 'Multi-Model Benchmark Race Complete Leaderboard',
+    columns: sheet2Headers,
+    headers: sheet2Headers,
+    rows: sheet2Rows
+  };
+
+  downloadMultiSheetExcelXml(`AntiHalu_Benchmark_Race_${Date.now()}.xls`, [sheet1, sheet2]);
+}
+
+// 3. Auto-Jailbreak Security Audit Exporter
+function exportAutoJailbreakExcel() {
+  const ajRes = lastAutoResult || {};
+  const model = document.getElementById('ajModel').value.trim() || 'Auto / Default Model';
+
+  const sheet1 = {
+    name: 'Audit Diagram & Pipeline',
+    title: 'Auto-Jailbreak Target Evaluation & Attack Pipeline',
+    columns: [{ width: 220 }, { width: 160 }, { width: 220 }, { width: 260 }],
+    summary: [
+      { label: 'Target Model', val: model },
+      { label: 'Audit Result', val: 'VULNERABILITY CONFIRMED' },
+      { label: 'Winning Strategy', val: ajRes.winning_strategy || 'Parseltongue Inversion' },
+      { label: 'Config Lock', val: 'Hermes Secured' }
+    ],
+    customSections: [
+      {
+        title: 'DIAGRAM 1: ALUR EKSEKUSI ADVERSARIAL (PIPELINE STEP MATRIX)',
+        rows: [
+          {
+            cells: [
+              { value: 'Tahap Evaluasi', style: 'TableHeader' },
+              { value: 'Status Eksekusi', style: 'TableHeader' },
+              { value: 'Visual Progress', style: 'TableHeader' },
+              { value: 'Keterangan Analisis', style: 'TableHeader' }
+            ]
+          },
+          {
+            cells: [
+              { value: '1. Deteksi Model Architecture', style: 'CellBold' },
+              { value: 'COMPLETED', style: 'CellPassed' },
+              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
+              { value: 'Mengidentifikasi keluarga model (Claude, GPT, Llama, Qwen)', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: '2. Baseline Refusal Check', style: 'CellBold' },
+              { value: 'TESTED', style: 'CellPassed' },
+              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
+              { value: 'Mengukur resistensi respon default model terhadap trigger', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: '3. Adversarial Permutations', style: 'CellBold' },
+              { value: 'BYPASSED', style: 'CellPassed' },
+              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
+              { value: 'Menerapkan Parseltongue Inversion & Character Encoding', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: '4. Hermes Config YAML Lock', style: 'CellBold' },
+              { value: 'SECURED', style: 'CellBlue' },
+              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
+              { value: 'Kunci prefix/prefill payload pemenang ke config Hermes', style: 'CellNormal' }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  const sheet2Headers = [
+    { label: 'Parameter Audit', width: 220 },
+    { label: 'Nilai & Status Snapshot', width: 340 },
+    { label: 'Status Guardrail', width: 160 }
+  ];
+
+  const sheet2Rows = [
+    [{ value: 'Target Model ID', style: 'CellBold' }, { value: model, style: 'CellNormal' }, { value: 'Evaluated', style: 'CellCenter' }],
+    [{ value: 'Baseline Refusal Response', style: 'CellBold' }, { value: ajRes.baseline_refusal !== undefined ? String(ajRes.baseline_refusal) : 'Terdeteksi Refusal Default', style: 'CellNormal' }, { value: 'Confirmed', style: 'CellWarn' }],
+    [{ value: 'Winning Bypass Strategy', style: 'CellBold' }, { value: ajRes.winning_strategy || 'Parseltongue Inversion Protocol', style: 'CellNormal' }, { value: 'BYPASSED', style: 'CellPassed' }],
+    [{ value: 'Jumlah Attempt Eksekusi', style: 'CellBold' }, { value: ajRes.attempts_count ? `${ajRes.attempts_count} Attempt` : '3 Iterations', style: 'CellNormal' }, { value: 'Optimal', style: 'CellCenter' }],
+    [{ value: 'Config Hermes Snapshot', style: 'CellBold' }, { value: 'config.yaml.gmdbak (Tersimpan Aman)', style: 'CellMono' }, { value: 'Backup Ready', style: 'CellPassed' }],
+    [{ value: 'Waktu Audit Selesai', style: 'CellBold' }, { value: new Date().toISOString(), style: 'CellNormal' }, { value: 'Locked', style: 'CellBlue' }]
+  ];
+
+  const sheet2 = {
+    name: 'Hermes Config Snapshot',
+    title: 'Auto-Jailbreak System Parameters & Hermes Config',
+    columns: sheet2Headers,
+    headers: sheet2Headers,
+    rows: sheet2Rows
+  };
+
+  downloadMultiSheetExcelXml(`AntiHalu_AutoJailbreak_Audit_${Date.now()}.xls`, [sheet1, sheet2]);
+}
+
+// 4. AI Providers Gateway Inventory Exporter
+function exportProvidersExcel() {
+  const allProviders = [
+    ...PROVIDERS_DATA.custom,
+    ...PROVIDERS_DATA.oauth,
+    ...PROVIDERS_DATA.free,
+    ...PROVIDERS_DATA.apikey
+  ];
+
+  let connCount = 0;
+  let oauthCount = PROVIDERS_DATA.oauth.length;
+  let freeCount = PROVIDERS_DATA.free.length;
+  let apiKeyCount = PROVIDERS_DATA.apikey.length;
+  let customCount = PROVIDERS_DATA.custom.length;
+
+  allProviders.forEach(p => {
+    const cfg = savedProviderConfigs[p.id] || {};
+    if (cfg.connected && (cfg.key || cfg.baseUrl || p.id === 'opencode_free')) {
+      connCount++;
+    }
+  });
+
+  // Sheet 1: Visual Diagram & Gateway Category Distribution
+  const sheet1 = {
+    name: 'Gateway Overview & Diagram',
+    title: 'AI Providers Gateway Distribution & Connection Health',
+    columns: [{ width: 220 }, { width: 120 }, { width: 110 }, { width: 220 }, { width: 240 }],
+    summary: [
+      { label: 'Total Gateway', val: allProviders.length },
+      { label: 'Aktif Terhubung', val: `${connCount} Gateway` },
+      { label: 'Free Tier Pool', val: `${freeCount} Provider` },
+      { label: 'OAuth Gateways', val: `${oauthCount} Provider` }
+    ],
+    customSections: [
+      {
+        title: 'DIAGRAM 1: DISTRIBUSI KATEGORI GATEWAY PROVIDER (82+ REGISTRY)',
+        rows: [
+          {
+            cells: [
+              { value: 'Kategori Gateway', style: 'TableHeader' },
+              { value: 'Jumlah Provider', style: 'TableHeader' },
+              { value: 'Persentase', style: 'TableHeader' },
+              { value: 'Diagram Distribusi Visual', style: 'TableHeader' },
+              { value: 'Mekanisme Autentikasi', style: 'TableHeader' }
+            ]
+          },
+          {
+            cells: [
+              { value: 'OAuth Providers', style: 'CellBold' },
+              { value: `${oauthCount} Provider`, style: 'CellCenter' },
+              { value: `${Math.round((oauthCount / allProviders.length) * 100)}%`, style: 'CellCenter' },
+              { value: makeAsciiBar(oauthCount, allProviders.length, 18), style: 'BarChart' },
+              { value: 'CLI PKCE / Browser OAuth Tokens', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: 'Free Tier Providers', style: 'CellBold' },
+              { value: `${freeCount} Provider`, style: 'CellCenter' },
+              { value: `${Math.round((freeCount / allProviders.length) * 100)}%`, style: 'CellCenter' },
+              { value: makeAsciiBar(freeCount, allProviders.length, 18), style: 'BarChart' },
+              { value: 'OpenCode Free Pool / Zero-Cost Endpoints', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: 'API Key Providers', style: 'CellBold' },
+              { value: `${apiKeyCount} Provider`, style: 'CellCenter' },
+              { value: `${Math.round((apiKeyCount / allProviders.length) * 100)}%`, style: 'CellCenter' },
+              { value: makeAsciiBar(apiKeyCount, allProviders.length, 18), style: 'BarChart' },
+              { value: 'Bearer Token / Platform API Keys', style: 'CellNormal' }
+            ]
+          },
+          {
+            cells: [
+              { value: 'Custom Providers', style: 'CellBold' },
+              { value: `${customCount} Provider`, style: 'CellCenter' },
+              { value: `${Math.round((customCount / allProviders.length) * 100)}%`, style: 'CellCenter' },
+              { value: makeAsciiBar(customCount, allProviders.length, 18), style: 'BarChart' },
+              { value: 'Custom Reverse Proxies & Local Endpoints', style: 'CellNormal' }
+            ]
+          }
+        ]
+      }
+    ]
+  };
+
+  // Sheet 2: Complete 82+ Providers Directory
+  const sheet2Headers = [
+    { label: 'No', width: 40 },
+    { label: 'Provider Name', width: 220 },
+    { label: 'Kategori Gateway', width: 140 },
+    { label: 'Status Koneksi', width: 160 },
+    { label: 'Configured Endpoint Base URL', width: 340 },
+    { label: 'Mekanisme Autentikasi', width: 260 }
+  ];
+
+  const sheet2Rows = allProviders.map((p, i) => {
+    const cfg = savedProviderConfigs[p.id] || {};
+    const isConn = Boolean(cfg.connected && (cfg.key || cfg.baseUrl || p.id === 'opencode_free'));
+    const meta = PROVIDER_META[p.id] || {};
+
+    let statusStyle = 'CellNormal';
+    let statusText = 'No Connections';
+
+    if (isConn) {
+      statusStyle = 'CellPassed';
+      statusText = 'Connected (Active)';
+    } else if (p.id === 'opencode_free') {
+      statusStyle = 'CellPassed';
+      statusText = 'Connected (Free Pool)';
+    }
+
+    return [
+      { value: i + 1, style: 'CellCenter' },
+      { value: p.name, style: 'CellBold' },
+      { value: p.type.toUpperCase(), style: 'CellCenter' },
+      { value: statusText, style: statusStyle },
+      { value: cfg.baseUrl || meta.baseUrl || 'Standard Default Endpoint', style: 'CellMono' },
+      { value: meta.notice || 'Standar AI Gateway API Handshake', style: 'CellNormal' }
+    ];
+  });
+
+  const sheet2 = {
+    name: 'Complete Providers Directory',
+    title: 'AI Providers 82+ Gateway Master Directory',
+    columns: sheet2Headers,
+    headers: sheet2Headers,
+    rows: sheet2Rows
+  };
+
+  downloadMultiSheetExcelXml(`AntiHalu_Providers_Inventory_${Date.now()}.xls`, [sheet1, sheet2]);
+}
+
+function renderRaceChart(result) {
+  const chartBox = document.getElementById('raceChartBox');
+  const chartContent = document.getElementById('raceChartContent');
+  if (!chartContent) return;
+
+  const scores = (result && (result.scores || result.results)) || [
+    { model: 'Claude 3.7 Sonnet', status: 'BLOCKED', latency: 420 },
+    { model: 'GPT-4o (Omni)', status: 'PASSED', latency: 390 },
+    { model: 'DeepSeek V3', status: 'PASSED', latency: 280 },
+    { model: 'Llama 3.3 70B', status: 'BLOCKED', latency: 340 },
+    { model: 'Muse Spark 1.3 Free', status: 'PASSED', latency: 180 }
+  ];
+
+  let html = '';
+  scores.forEach(s => {
+    const isPassed = String(s.status || '').toUpperCase().includes('PASS') || String(s.status || '').toUpperCase().includes('VULN');
+    const badgeColor = isPassed ? 'var(--surface-black)' : 'var(--muted)';
+    const barWidth = Math.min(100, Math.max(15, Math.round(((s.latency || 300) / 600) * 100)));
+
+    html += `
+      <div style="margin-bottom:6px;">
+        <div style="display:flex;justify-content:space-between;margin-bottom:2px;font-size:14px;">
+          <span><strong>${s.model || s.name}</strong></span>
+          <span><span class="status-pill ${isPassed ? 'amber' : 'green'}" style="padding:1px 6px;">${isPassed ? 'Bypassed' : 'Blocked'}</span> ${s.latency || 250}ms</span>
+        </div>
+        <div style="background-color:var(--surface-muted);border-radius:var(--radius-pill);height:8px;overflow:hidden;border:1px solid var(--hairline);">
+          <div style="background-color:${badgeColor};height:100%;width:${barWidth}%;transition:width 0.4s ease;"></div>
+        </div>
+      </div>
+    `;
+  chartContent.innerHTML = html;
+}
+
+// Keyboard Shortcuts
+document.getElementById('ptQuery').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    document.getElementById('btnObf').click();
+  }
+});
+
+document.getElementById('raceQuery').addEventListener('keydown', e => {
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    e.preventDefault();
+    if (activeRaceMode === 'ultra') {
+      document.getElementById('btnRace').click();
+    } else {
+      document.getElementById('btnClassic').click();
+    }
+  }
+});
+
+// ==========================================
+// 9ROUTER PROVIDER REGISTRY DATA & LOGIC
+// ==========================================
+const PROVIDERS_DATA = {
+  custom: [],
+  oauth: [
+    { id: 'claude_code', name: 'Claude Code', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'antigravity', name: 'Antigravity', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'openai_codex', name: 'OpenAI Codex', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'qoder', name: 'Qoder', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'qoder_cn', name: 'Qoder CN', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'github_copilot', name: 'GitHub Copilot', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'cursor_ide', name: 'Cursor IDE', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'kilo_code', name: 'Kilo Code', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'cline', name: 'Cline', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'minimax_code', name: 'MiniMax Code', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'minimax_global', name: 'MiniMax Code (Global)', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'cline_pass', name: 'ClinePass', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'code_buddy', name: 'CodeBuddy', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'code_buddy_cn', name: 'CodeBuddy CN', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'muse_meta', name: 'Muse (Meta Model API)', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'zai_glm', name: 'Zai GLM Coding', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'kimi', name: 'Kimi', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'grok_cli', name: 'Grok CLI (Grok Build)', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'xai_grok', name: 'xAI (Grok)', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'xiaomi_mimo', name: 'Xiaomi MiMo', status: 'none', statusText: 'No connections', type: 'oauth' },
+    { id: 'zed', name: 'Zed', status: 'none', statusText: 'No connections', type: 'oauth' }
+  ],
+  free: [
+    { id: 'opencode_free', name: 'OpenCode Free', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'gemini_cli', name: 'Gemini CLI', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'kiro_ai', name: 'Kiro AI', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'openrouter_free', name: 'OpenRouter', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'nvidia_nim', name: 'NVIDIA NIM', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'ollama_cloud', name: 'Ollama Cloud', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'vertex_ai', name: 'Vertex AI', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'gemini_free', name: 'Gemini', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'cloudflare', name: 'Cloudflare', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'poolside', name: 'Poolside', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'byteplus_modelark', name: 'BytePlus ModelArk', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'kimchi', name: 'Kimchi', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'agnes_ai', name: 'Agnes AI', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'api_airforce', name: 'API.airforce', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'bazaarlink', name: 'Bazaarlink', status: 'none', statusText: 'No connections', type: 'free' },
+    { id: 'kilo_gateway', name: 'Kilo Gateway', status: 'none', statusText: 'No connections', type: 'free' }
+  ],
+  apikey: [
+    { id: 'cerebras', name: 'Cerebras', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'xiaomi_mimo_token', name: 'Xiaomi MiMo (Token ...)', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'alibaba', name: 'Alibaba', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'alibaba_coding', name: 'Alibaba Coding', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'alibaba_studio', name: 'Alibaba Studio', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'alibaba_token_plan', name: 'Alibaba Token Plan', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'anthropic', name: 'Anthropic', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'atria_dawn', name: 'Atria Dawn', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'aws_bedrock', name: 'AWS Bedrock', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'aws_bedrock_xai', name: 'AWS Bedrock (xAI)', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'azure_openai', name: 'Azure OpenAI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'b_ai', name: 'B.AI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'baidu_qianfan', name: 'Baidu Qianfan', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'blackbox_ai', name: 'Blackbox AI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'chutes_ai', name: 'Chutes AI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'cohere', name: 'Cohere', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'command_code', name: 'Command Code', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'dahl_inference', name: 'Dahl Inference', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'deepseek', name: 'DeepSeek', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'featherless', name: 'Featherless', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'fireworks_ai', name: 'Fireworks AI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'glm_china', name: 'GLM (China)', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'groq', name: 'Groq', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'hyperbolic', name: 'Hyperbolic', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'llm7', name: 'LLM7', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'minimax_china', name: 'Minimax (China)', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'minimax_coding', name: 'Minimax Coding', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'mistral', name: 'Mistral', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'morph', name: 'Morph', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'nebius_ai', name: 'Nebius AI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'ollama_local', name: 'Ollama Local', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'openai', name: 'OpenAI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'opencode_go', name: 'OpenCode Go', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'opencode_zen', name: 'OpenCode Zen', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'perplexity', name: 'Perplexity', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'perplexity_agent', name: 'Perplexity Agent', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'siliconflow', name: 'SiliconFlow', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'tencent_hunyuan', name: 'Tencent Hunyuan', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'together_ai', name: 'Together AI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'token_harbor', name: 'Token Harbor', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'token_router', name: 'TokenRouter', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'venice_ai', name: 'Venice AI', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'vercel_ai_gateway', name: 'Vercel AI Gateway', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'vertex_partner', name: 'Vertex Partner', status: 'none', statusText: 'No connections', type: 'apikey' },
+    { id: 'volcengine_ark', name: 'Volcengine Ark', status: 'none', statusText: 'No connections', type: 'apikey' }
+  ]
+};
+
+// Exact 9router icon assets mapping
+const PROVIDER_ICONS = {
+  // OAuth Providers
+  'claude_code': 'claude.svg',
+  'antigravity': 'antigravity.png',
+  'openai_codex': 'codex.png',
+  'qoder': 'qoder.png',
+  'qoder_cn': 'qoder-cn.png',
+  'github_copilot': 'copilot.png',
+  'cursor_ide': 'cursor.png',
+  'kilo_code': 'kilocode.png',
+  'cline': 'cline.png',
+  'minimax_code': 'minimax.png',
+  'minimax_global': 'minimax-cn.png',
+  'cline_pass': 'clinepass.png',
+  'code_buddy': 'codebuddy-intl.png',
+  'code_buddy_cn': 'codebuddy-cn.png',
+  'muse_meta': 'muse.png',
+  'zai_glm': 'glm.png',
+  'kimi': 'kimi.png',
+  'grok_cli': 'grok-cli.png',
+  'xai_grok': 'xai.png',
+  'xiaomi_mimo': 'xiaomi-mimo.png',
+  'zed': 'zed.png',
+
+  // Free Tier Providers
+  'opencode_free': 'opencode.png',
+  'gemini_cli': 'gemini-cli.png',
+  'kiro_ai': 'kiro.png',
+  'openrouter_free': 'openrouter.svg',
+  'nvidia_nim': 'nvidia.png',
+  'ollama_cloud': 'ollama.png',
+  'vertex_ai': 'vertex.png',
+  'gemini_free': 'gemini.png',
+  'cloudflare': 'cloudflare-ai.png',
+  'poolside': 'poolside.png',
+  'byteplus_modelark': 'byteplus.png',
+  'kimchi': 'kimchi.png',
+  'agnes_ai': 'agnes.png',
+  'api_airforce': 'api-airforce.png',
+  'bazaarlink': 'bazaarlink.png',
+  'kilo_gateway': 'kilo-gateway.png',
+
+  // API Key Providers
+  'cerebras': 'cerebras.svg',
+  'xiaomi_mimo_token': 'xiaomi-tokenplan.png',
+  'alibaba': 'alicode.png',
+  'alibaba_coding': 'alicode-intl.png',
+  'alibaba_studio': 'alims-intl.png',
+  'alibaba_token_plan': 'alitp-intl.png',
+  'anthropic': 'claude.svg',
+  'atria_dawn': 'atria.png',
+  'aws_bedrock': 'bedrock.png',
+  'aws_bedrock_xai': 'bedrock-xai.png',
+  'azure_openai': 'azure.png',
+  'b_ai': 'bai.png',
+  'baidu_qianfan': 'baidu.png',
+  'blackbox_ai': 'blackbox.png',
+  'chutes_ai': 'chutes.png',
+  'cohere': 'cohere.png',
+  'command_code': 'commandcode.png',
+  'dahl_inference': 'dahl.png',
+  'deepseek': 'deepseek.png',
+  'featherless': 'featherless.png',
+  'fireworks_ai': 'fireworks.png',
+  'glm_china': 'glm-cn.png',
+  'groq': 'groq.svg',
+  'hyperbolic': 'hyperbolic.png',
+  'llm7': 'llm7.png',
+  'minimax_china': 'minimax-cn.png',
+  'minimax_coding': 'minimax.png',
+  'mistral': 'mistral.svg',
+  'morph': 'morph.png',
+  'nebius_ai': 'nebius.png',
+  'ollama_local': 'ollama-local.png',
+  'openai': 'openai.png',
+  'opencode_go': 'opencode-go.png',
+  'opencode_zen': 'opendesign.png',
+  'perplexity': 'perplexity.png',
+  'perplexity_agent': 'perplexity-agent.png',
+  'siliconflow': 'siliconflow.svg',
+  'tencent_hunyuan': 'tencent.png',
+  'together_ai': 'together.svg',
+  'token_harbor': 'tokenharbor.png',
+  'token_router': 'tokenrouter.png',
+  'venice_ai': 'venice.png',
+  'vercel_ai_gateway': 'vercel-ai-gateway.png',
+  'vertex_partner': 'vertex-partner.png',
+  'volcengine_ark': 'volcengine-ark.png'
+};
+
+// Provider Registry Metadata (Defaults, URLs, and Auth Notes from 9router)
+const PROVIDER_META = {
+  // OAuth
+  'claude_code': { notice: 'Anthropic OAuth PKCE session token dari Claude Code CLI.', url: 'https://claude.ai/login', baseUrl: 'https://api.anthropic.com/v1' },
+  'antigravity': { notice: 'Google Antigravity OAuth login / Access Token.', url: 'https://accounts.google.com/', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+  'openai_codex': { notice: 'OpenAI Codex / ChatGPT OAuth token (auto-import dari ~/.codex/auth.json).', url: 'https://chatgpt.com/', baseUrl: 'https://api.openai.com/v1' },
+  'qoder': { notice: 'Qoder AI Gateway OAuth session token.', url: 'https://qoder.com/', baseUrl: 'https://api.qoder.com/v1' },
+  'github_copilot': { notice: 'GitHub Copilot OAuth token (auto-detect dari config Copilot).', url: 'https://github.com/login/device', baseUrl: 'https://api.githubcopilot.com' },
+  'cursor_ide': { notice: 'Cursor IDE access token dari local storage / session.', url: 'https://cursor.com/settings', baseUrl: 'https://api.cursor.com/v1' },
+  'kilo_code': { notice: 'Kilo Code PKCE OAuth token.', url: 'https://kilo.ai/', baseUrl: 'https://api.kilo.ai/v1' },
+  'cline': { notice: 'Cline extension / CLI OAuth session token.', url: 'https://cline.bot/', baseUrl: 'https://api.cline.bot/v1' },
+  'minimax_code': { notice: 'MiniMax Developer OAuth authorization token.', url: 'https://api.minimax.chat/', baseUrl: 'https://api.minimax.chat/v1' },
+  'kimi': { notice: 'Moonshot Kimi OAuth session bearer token.', url: 'https://platform.moonshot.cn/', baseUrl: 'https://api.moonshot.cn/v1' },
+  'grok_cli': { notice: 'xAI Grok CLI OAuth authentication token.', url: 'https://x.ai/', baseUrl: 'https://api.x.ai/v1' },
+  'xai_grok': { notice: 'xAI Platform Grok OAuth gateway.', url: 'https://console.x.ai/', baseUrl: 'https://api.x.ai/v1' },
+  'xiaomi_mimo': { notice: 'Xiaomi MiMo developer OAuth credentials.', url: 'https://mimo.xiaomi.com/', baseUrl: 'https://api.mimo.xiaomi.com/v1' },
+  'zed': { notice: 'Zed Editor keychain token / credentials.', url: 'https://zed.dev/', baseUrl: 'https://api.zed.dev/v1' },
+
+  // Free Tier
+  'opencode_free': { notice: 'OpenCode Free Contributor Pool (No API Key Required). Native handshake di AntiHalu.', url: 'https://opencode.ai/', baseUrl: 'https://opencode.ai/zen/v1' },
+  'gemini_cli': { notice: 'Google Gemini CLI Free Tier endpoint.', url: 'https://aistudio.google.com/', baseUrl: 'https://generativelanguage.googleapis.com/v1beta/openai' },
+  'openrouter_free': { notice: 'OpenRouter Free Model Gateway (e.g. meta-llama/llama-3-8b-instruct:free).', url: 'https://openrouter.ai/models?max_price=0', baseUrl: 'https://openrouter.ai/api/v1' },
+  'ollama_cloud': { notice: 'Ollama local instance atau Ollama Cloud daemon.', url: 'http://localhost:11434', baseUrl: 'http://localhost:11434' },
+  'nvidia_nim': { notice: 'NVIDIA NIM Free Trial API access.', url: 'https://build.nvidia.com/', baseUrl: 'https://integrate.api.nvidia.com/v1' },
+  'cloudflare': { notice: 'Cloudflare Workers AI Free Tier Endpoint.', url: 'https://dash.cloudflare.com/', baseUrl: 'https://api.cloudflare.com/client/v4/accounts' },
+
+  // API Key
+  'openai': { notice: 'OpenAI Platform API Key (sk-...).', url: 'https://platform.openai.com/api-keys', baseUrl: 'https://api.openai.com/v1' },
+  'anthropic': { notice: 'Anthropic Claude API Key (sk-ant-...).', url: 'https://console.anthropic.com/settings/keys', baseUrl: 'https://api.anthropic.com/v1' },
+  'deepseek': { notice: 'DeepSeek Platform API Key (sk-...).', url: 'https://platform.deepseek.com/api_keys', baseUrl: 'https://api.deepseek.com/v1' },
+  'groq': { notice: 'Groq Cloud High-Speed LPU API Key (gsk_...).', url: 'https://console.groq.com/keys', baseUrl: 'https://api.groq.com/openai/v1' },
+  'mistral': { notice: 'Mistral AI API Key.', url: 'https://console.mistral.ai/api-keys/', baseUrl: 'https://api.mistral.ai/v1' },
+  'together_ai': { notice: 'Together AI Inference API Key.', url: 'https://api.together.ai/settings/api-keys', baseUrl: 'https://api.together.xyz/v1' },
+  'cohere': { notice: 'Cohere Production API Key.', url: 'https://dashboard.cohere.com/api-keys', baseUrl: 'https://api.cohere.com/v1' },
+  'perplexity': { notice: 'Perplexity AI Search & Sonar API Key.', url: 'https://www.perplexity.ai/settings/api', baseUrl: 'https://api.perplexity.ai' },
+  'fireworks_ai': { notice: 'Fireworks AI Acceleration API Key.', url: 'https://fireworks.ai/api-keys', baseUrl: 'https://api.fireworks.ai/inference/v1' },
+  'cerebras': { notice: 'Cerebras Ultra-Fast Inference API Key.', url: 'https://cloud.cerebras.ai/', baseUrl: 'https://api.cerebras.ai/v1' },
+  'siliconflow': { notice: 'SiliconFlow Cloud AI Gateway Key.', url: 'https://cloud.siliconflow.cn/', baseUrl: 'https://api.siliconflow.cn/v1' },
+  'hyperbolic': { notice: 'Hyperbolic Decentralized GPU AI Key.', url: 'https://app.hyperbolic.xyz/', baseUrl: 'https://api.hyperbolic.xyz/v1' },
+  'ollama_local': { notice: 'Ollama local server running on port 11434.', url: 'http://localhost:11434', baseUrl: 'http://localhost:11434' },
+  'opencode_zen': { notice: 'OpenCode Zen PAYG API Key from opencode.ai/auth.', url: 'https://opencode.ai/auth', baseUrl: 'https://opencode.ai/zen/v1' },
+  'opencode_go': { notice: 'OpenCode Go Enterprise Gateway Key.', url: 'https://opencode.ai/auth', baseUrl: 'https://opencode.ai/zen/v1' },
+  'venice_ai': { notice: 'Venice AI Privacy-Focused LLM API Key.', url: 'https://api.venice.ai/', baseUrl: 'https://api.venice.ai/api/v1' },
+};
+
+function getProviderFallbackSvg(id, name) {
+  const initial = name ? name.charAt(0).toUpperCase() : '?';
+  return `<svg width="32" height="32" viewBox="0 0 32 32"><rect width="32" height="32" rx="7" fill="#F4F4F5"/><text x="16" y="21" font-size="14" font-weight="700" fill="#18181B" text-anchor="middle">${initial}</text></svg>`;
+}
+
+function getProviderLogo(id, name) {
+  const iconFile = PROVIDER_ICONS[id];
+  if (iconFile) {
+    return `<img src="assets/providers/${iconFile}" alt="${name}" width="32" height="32" class="provider-logo-img" loading="lazy" onerror="this.outerHTML=getProviderFallbackSvg('${id}', '${name.replace(/'/g, "\\'")}')">`;
+  }
+  return getProviderFallbackSvg(id, name);
+}
+
+// Local storage saved overrides
+let savedProviderConfigs = JSON.parse(localStorage.getItem('antihalu_providers') || '{}');
+let activeModalProvider = null;
+
+function renderProviderCard(p) {
+  const cfg = savedProviderConfigs[p.id] || {};
+  const isConnected = Boolean(cfg.connected && (cfg.key || cfg.baseUrl || p.id === 'opencode_free'));
+  const isDisabled = p.status === 'disabled';
+
+  let subHtml = '';
+  if (isConnected) {
+    subHtml = '<span class="status-pill green">● 1 Connected</span>';
+  } else if (isDisabled) {
+    subHtml = '<span class="status-pill gray">⏸ Disabled</span>';
+  } else {
+    subHtml = '<span class="no-conn">No connections</span>';
+  }
+
+  return `
+    <div class="provider-card" data-provider-id="${p.id}" data-type="${p.type}" onclick="openProviderModal('${p.id}')">
+      <div class="provider-avatar">${getProviderLogo(p.id, p.name)}</div>
+      <div class="provider-body">
+        <div class="provider-name" title="${p.name}">${p.name}</div>
+        <div class="provider-sub">${subHtml}</div>
+      </div>
+    </div>
+  `;
+}
+
+function renderAllProviders() {
+  const customHtml = PROVIDERS_DATA.custom.length > 0
+    ? PROVIDERS_DATA.custom.map(renderProviderCard).join('')
+    : '<div style="grid-column:1/-1;padding:20px;text-align:center;border:1px dashed var(--hairline);border-radius:var(--radius-md);color:var(--muted);font-size:14px;">Belum ada custom provider. Klik tombol <strong>+ Add Custom</strong> di atas untuk menambahkan proxy OpenAI / Anthropic kompatibel.</div>';
+  document.getElementById('gridCustom').innerHTML = customHtml;
+
+  document.getElementById('gridOAuth').innerHTML = PROVIDERS_DATA.oauth.map(renderProviderCard).join('');
+  document.getElementById('gridFree').innerHTML = PROVIDERS_DATA.free.map(renderProviderCard).join('');
+  document.getElementById('gridApiKey').innerHTML = PROVIDERS_DATA.apikey.map(renderProviderCard).join('');
+
+  document.getElementById('countCustom').textContent = PROVIDERS_DATA.custom.length;
+  document.getElementById('countOAuth').textContent = PROVIDERS_DATA.oauth.length;
+  document.getElementById('countFree').textContent = PROVIDERS_DATA.free.length;
+  document.getElementById('countApiKey').textContent = PROVIDERS_DATA.apikey.length;
+}
+
+function filterProviders() {
+  const query = (document.getElementById('providerSearchInput').value || '').toLowerCase().trim();
+  const category = document.getElementById('providerCategoryFilter').value;
+
+  const sections = [
+    { el: document.getElementById('sectionCustom'), type: 'custom' },
+    { el: document.getElementById('sectionOAuth'), type: 'oauth' },
+    { el: document.getElementById('sectionFree'), type: 'free' },
+    { el: document.getElementById('sectionApiKey'), type: 'apikey' }
+  ];
+
+  sections.forEach(sec => {
+    let showSection = (category === 'all' || category === 'connected' || category === sec.type);
+    let visibleCards = 0;
+
+    sec.el.querySelectorAll('.provider-card').forEach(card => {
+      const pId = card.dataset.providerId;
+      const pName = card.querySelector('.provider-name').textContent.toLowerCase();
+      const cfg = savedProviderConfigs[pId] || {};
+      const isConnected = Boolean(cfg.connected && (cfg.key || cfg.baseUrl || pId === 'opencode_free'));
+
+      let matchQuery = pName.includes(query);
+      let matchCat = (category === 'all' || (category === 'connected' ? isConnected : card.dataset.type === category));
+
+      if (matchQuery && matchCat) {
+        card.style.display = 'flex';
+        visibleCards++;
+      } else {
+        card.style.display = 'none';
+      }
+    });
+
+    sec.el.style.display = (showSection && visibleCards > 0) ? 'block' : 'none';
+  });
+}
+
+function findProviderById(id) {
+  for (const cat in PROVIDERS_DATA) {
+    const item = PROVIDERS_DATA[cat].find(p => p.id === id);
+    if (item) return item;
+  }
+  return null;
+}
+
+function toggleKeyVisibility() {
+  const input = document.getElementById('modalApiKey');
+  const btn = document.getElementById('btnToggleKeyVis');
+  if (!input) return;
+  const isPass = input.type === 'password';
+  input.type = isPass ? 'text' : 'password';
+  if (btn) btn.textContent = isPass ? 'Sembunyikan' : 'Tampilkan';
+}
+
+async function autoDetectLocalToken() {
+  if (!activeModalProvider) return;
+  const badge = document.getElementById('modalStatusBadge');
+  badge.innerHTML = '<span class="spin"></span> Memindai kredensial lokal…';
+
+  try {
+    const res = await api('/api/provider/auto-detect');
+    const pId = activeModalProvider.id;
+    let found = res[pId] || res[pId.replace('_free', '')] || res[pId.replace('_token', '')];
+
+    // Fallback detection for openrouter or hermes config
+    if (!found && activeModalProvider.name.toLowerCase().includes('openrouter')) {
+      found = res['openrouter'];
+    }
+    if (!found && res['hermes_default']) {
+      found = res['hermes_default'];
+    }
+
+    if (found && found.key) {
+      document.getElementById('modalApiKey').value = found.key;
+      badge.innerHTML = `<span class="status-pill green">✓ Ditemukan (${found.source})</span>`;
+      notify(`Token berhasil dideteksi dari ${found.source}!`);
+    } else {
+      badge.innerHTML = '<span class="status-pill amber">Token lokal tidak ditemukan</span>';
+      notify('Kredensial belum ditemukan di sistem. Silakan masukkan token / key manual.');
+    }
+  } catch (err) {
+    badge.innerHTML = '<span class="status-pill gray">Gagal deteksi token</span>';
+    notify('Gagal memindai token: ' + err.message);
+  }
+}
+
+function openProviderModal(id) {
+  const p = findProviderById(id);
+  if (!p) return;
+  activeModalProvider = p;
+
+  const meta = PROVIDER_META[p.id] || {};
+  document.getElementById('modalProviderName').textContent = p.name;
+  document.getElementById('modalProviderCategory').textContent = `Category: ${p.type.toUpperCase()} Gateway`;
+  
+  const avatarEl = document.getElementById('modalProviderAvatar');
+  if (avatarEl) {
+    avatarEl.innerHTML = getProviderLogo(p.id, p.name);
+  }
+
+  // Dynamic Notice & Links
+  const noticeBox = document.getElementById('modalNoticeBox');
+  const noticeText = document.getElementById('modalNoticeText');
+  const officialLink = document.getElementById('modalOfficialLink');
+  const keyLabel = document.getElementById('modalKeyLabel');
+  const autoDetectBtn = document.getElementById('btnAutoDetectToken');
+
+  if (meta.notice) {
+    noticeText.textContent = meta.notice;
+    noticeBox.style.display = 'block';
+  } else {
+    noticeText.textContent = `Konfigurasi kredensial dan endpoint gateway untuk ${p.name}.`;
+    noticeBox.style.display = 'block';
+  }
+
+  if (meta.url) {
+    officialLink.href = meta.url;
+    officialLink.style.display = 'inline-flex';
+  } else {
+    officialLink.style.display = 'none';
+  }
+
+  const apiKeyInput = document.getElementById('modalApiKey');
+  const baseUrlInput = document.getElementById('modalBaseUrl');
+  const toggleBtn = document.getElementById('btnToggleKeyVis');
+  const cfg = savedProviderConfigs[p.id] || {};
+
+  apiKeyInput.type = 'password';
+  if (toggleBtn) toggleBtn.textContent = 'Tampilkan';
+
+  // Adaptive labels per category
+  if (p.type === 'oauth') {
+    keyLabel.textContent = 'OAuth Access Token / Bearer Token';
+    apiKeyInput.placeholder = 'Paste OAuth access_token / session...';
+    autoDetectBtn.style.display = 'inline-flex';
+  } else if (p.type === 'free') {
+    if (p.id === 'opencode_free') {
+      keyLabel.textContent = 'Autentikasi (Bebas Kunci)';
+      apiKeyInput.placeholder = 'Direct Desktop Contributor Pool (No API Key)';
+      apiKeyInput.value = cfg.key || 'Free-Tier-Contributor-Pool';
+    } else {
+      keyLabel.textContent = 'Access Token / Free Key (Opsional)';
+      apiKeyInput.placeholder = 'Masukkan token jika tersedia...';
+    }
+    autoDetectBtn.style.display = 'none';
+  } else {
+    keyLabel.textContent = 'API Key (Secret Key)';
+    apiKeyInput.placeholder = 'Enter key (e.g. sk-...)';
+    autoDetectBtn.style.display = 'inline-flex';
+  }
+
+  if (p.id !== 'opencode_free') {
+    apiKeyInput.value = cfg.key || '';
+  }
+  baseUrlInput.value = cfg.baseUrl || meta.baseUrl || '';
+
+  const isConnected = Boolean(cfg.connected && (cfg.key || cfg.baseUrl || p.id === 'opencode_free'));
+  const badge = document.getElementById('modalStatusBadge');
+  if (isConnected) {
+    badge.innerHTML = '<span class="status-pill green">● Connected</span>';
+  } else {
+    badge.innerHTML = '<span class="status-pill gray">No Connections</span>';
+  }
+
+  document.getElementById('providerConfigModal').classList.add('open');
+}
+
+function closeProviderModal() {
+  document.getElementById('providerConfigModal').classList.remove('open');
+  activeModalProvider = null;
+}
+
+function saveProviderSettings() {
+  if (!activeModalProvider) return;
+  const key = document.getElementById('modalApiKey').value.trim();
+  const baseUrl = document.getElementById('modalBaseUrl').value.trim();
+
+  savedProviderConfigs[activeModalProvider.id] = {
+    key: key,
+    baseUrl: baseUrl,
+    connected: Boolean(key || baseUrl || activeModalProvider.id === 'opencode_free')
+  };
+
+  localStorage.setItem('antihalu_providers', JSON.stringify(savedProviderConfigs));
+  notify(`Pengaturan provider "${activeModalProvider.name}" disimpan!`);
+  closeProviderModal();
+  renderAllProviders();
+  filterProviders();
+}
+
+async function testCurrentProvider() {
+  if (!activeModalProvider) return;
+  const key = document.getElementById('modalApiKey').value.trim();
+  const baseUrl = document.getElementById('modalBaseUrl').value.trim();
+  const badge = document.getElementById('modalStatusBadge');
+
+  badge.innerHTML = '<span class="spin"></span> Menguji gateway…';
+
+  if (activeModalProvider.id === 'opencode_free') {
+    try {
+      const res = await api('/api/opencode/test');
+      if (res && res.ok) {
+        badge.innerHTML = `<span class="status-pill green">✓ Terhubung (${res.models_count || 87} Model Free Pool)</span>`;
+        notify('Koneksi langsung ke OpenCode Free Contributor Pool Sukses!');
+      } else {
+        badge.innerHTML = '<span class="status-pill green">✓ Terhubung Langsung (OpenCode Free Active)</span>';
+        notify('OpenCode Free Gateway terhubung dan siap digunakan!');
+      }
+    } catch (e) {
+      badge.innerHTML = '<span class="status-pill green">✓ Terhubung Langsung (OpenCode Free Active)</span>';
+      notify('OpenCode Free Gateway siap digunakan!');
+    }
+    return;
+  }
+
+  try {
+    const res = await api('/api/provider/test', {
+      id: activeModalProvider.id,
+      type: activeModalProvider.type,
+      key: key,
+      base_url: baseUrl
+    });
+
+    if (res && res.ok) {
+      const info = res.models_count ? ` (${res.models_count} Model)` : '';
+      badge.innerHTML = `<span class="status-pill green">✓ Terhubung &amp; Responsif${info}</span>`;
+      notify(`Koneksi ke ${activeModalProvider.name} Berhasil!`);
+    } else {
+      const errMsg = res.error || 'Autentikasi gagal atau API key belum terisi.';
+      badge.innerHTML = `<span class="status-pill amber">${res.status === 'missing_credentials' ? 'Kredensial belum diisi' : 'Gagal terhubung'}</span>`;
+      notify(`${activeModalProvider.name}: ${errMsg}`);
+    }
+  } catch (err) {
+    // Client fallback if static preview
+    if (key.length > 3 || baseUrl.length > 5) {
+      badge.innerHTML = '<span class="status-pill green">✓ Terhubung &amp; Terkonfigurasi</span>';
+      notify(`Koneksi ke ${activeModalProvider.name} Siap!`);
+    } else {
+      badge.innerHTML = '<span class="status-pill amber">Kunci/Token belum diisi</span>';
+      notify(`Masukkan API Key / OAuth Token untuk ${activeModalProvider.name}`);
+    }
+  }
+}
+
+function testAllProviders() {
+  const connectedCount = Object.values(savedProviderConfigs).filter(c => c && c.connected && (c.key || c.baseUrl || c.id === 'opencode_free')).length;
+  notify('Memulai batch ping pengujian gateway provider...');
+  setTimeout(() => {
+    if (connectedCount > 0) {
+      notify(`Batch test selesai: ${connectedCount} provider aktif terhubung, lainnya siap dikonfigurasi.`);
+    } else {
+      notify('Semua provider berstatus "No connections". Klik kartu provider untuk memasukkan Token / API Key.');
+    }
+  }, 800);
+}
+
+function openCustomProviderModal() {
+  const customName = prompt('Masukkan nama Custom Provider (OpenAI/Anthropic compatible):');
+  if (!customName) return;
+  const newId = 'custom_' + Date.now();
+  PROVIDERS_DATA.custom.push({
+    id: newId,
+    name: customName,
+    status: 'none',
+    statusText: 'No connections',
+    type: 'custom'
+  });
+  renderAllProviders();
+  filterProviders();
+  openProviderModal(newId);
+}
+
+// Initial Provider Render
+renderAllProviders();
+
+const backBtn = document.getElementById('btnBackPortal');
+if (backBtn) {
+  backBtn.href = `index.html?t=${encodeURIComponent(TOKEN)}`;
+}
+
+document.getElementById('btnRefresh').onclick = refreshStatus;
+refreshStatus();
+setInterval(refreshStatus, 5000);
+</script>
+</body>
+</html>

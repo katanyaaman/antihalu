@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 128 128">
+  <rect width="128" height="128" rx="28" fill="#F0F4FE"/>
+  <circle cx="64" cy="64" r="42" fill="none" stroke="#2563EB" stroke-width="3.5" stroke-dasharray="14 5"/>
+  <text x="64" y="76" font-size="34" font-weight="900" font-family="system-ui, -apple-system, sans-serif" fill="#1D4ED8" text-anchor="middle" letter-spacing="-1">SF</text>
+  <circle cx="28" cy="46" r="3.5" fill="#2563EB"/>
+  <circle cx="100" cy="82" r="3.5" fill="#2563EB"/>
+  <line x1="28" y1="46" x2="38" y2="54" stroke="#2563EB" stroke-width="2.5"/>
+  <line x1="100" y1="82" x2="90" y2="74" stroke="#2563EB" stroke-width="2.5"/>
+</svg>

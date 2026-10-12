@@ -23,32 +23,55 @@ Skill aslinya dari Nous Research (tersembunyi/optional), dashboard ini bikin sem
 
 ## Requirements
 
-- **Python 3.8+** dengan modul `pyyaml` (wajib) dan `openai` (untuk auto-jailbreak/race)
+- **Python 3.8+** dengan modul berikut:
   ```bash
-  pip install pyyaml openai
+  pip install pyyaml openai requests ruamel.yaml
   ```
-- **Hermes Agent** terpasang + skill godmode:
-  ```bash
-  hermes skills install official/security/godmode
-  ```
-  Script skill dibaca dari `~/.hermes/skills/security/godmode/scripts/`
-- **API key** di `~/.hermes/.env` (tergantung fitur):
-  ```
+- **API key** di `.env` (atau `~/.hermes/.env` jika ada):
+  ```env
   OPENROUTER_API_KEY=...   # untuk race ULTRAPLINIAN / Classic
-  OPENAI_API_KEY=...       # alternatif buat auto-jailbreak
+  OPENAI_API_KEY=...       # untuk auto-jailbreak target OpenAI
+  ANTHROPIC_API_KEY=...    # untuk auto-jailbreak target Claude
   ```
 
 ---
 
-## Instalasi cepat
+## Struktur Folder Project
+
+```
+antihalu/
+├── core/
+│   ├── security/          # Engine Godmode (Parseltongue, Race, Auto-Jailbreak)
+│   │   ├── parseltongue.py
+│   │   ├── race.py
+│   │   ├── auto_jailbreak.py
+│   │   ├── templates/     # Prefill JSON templates
+│   │   └── references/    # Jailbreak & refusal documentation
+│   ├── plugins/           # Folder ekstensi untuk fitur & plugin baru di masa depan
+│   └── config.py          # Unified settings manager
+├── data/                  # Runtime storage (token, config.json, prefill.json)
+├── dashboard.html         # Web UI Security Command Center
+├── index.html             # Landing / alternative interface
+├── dashboard.py           # Standalone HTTP Server & API Gateway
+├── run.bat / run.ps1      # Shortcut runner untuk Windows
+└── README.md
+```
+
+---
+
+## Instalasi & Menjalankan
 
 ```bash
 git clone https://github.com/katanyaaman/antihalu.git
 cd antihalu
-python3 dashboard.py
-```
 
-> **Skill godmode auto-install:** saat pertama dijalankan, dashboard otomatis menjalankan `hermes skills install official/security/godmode` kalau skill-nya belum ada (butuh Hermes Agent terpasang). Kalau `hermes` gak ditemukan, jalankan perintah itu manual dulu lalu start ulang.
+# Menggunakan runner:
+./run.bat       # Windows (CMD)
+./run.ps1       # Windows (PowerShell)
+
+# Atau langsung via Python:
+python dashboard.py
+```
 
 Output pertama kali:
 

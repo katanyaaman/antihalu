@@ -92,6 +92,16 @@ from core.security import (
     _detect_model_family,
     _get_current_model,
 )
+from generate_excel import (
+    export_jailbreak_excel,
+    export_jailbreak_json,
+    export_jailbreak_markdown,
+    export_race_excel,
+    list_saved_reports,
+    REPORTS_DIR,
+    RACE_DIR,
+    get_timestamp_slug,
+)
 
 # ---------------------------------------------------------------- Helpers
 def json_safe(obj):
@@ -230,6 +240,20 @@ def job_auto_jailbreak(payload):
         }
         save_config(cfg)
 
+    # Auto-save report files to organized reports/ directory
+    try:
+        json_file = export_jailbreak_json(res)
+        excel_file = export_jailbreak_excel(res)
+        md_file = export_jailbreak_markdown(res)
+        res["saved_files"] = {
+            "excel": f"/reports/auto_jailbreak/{excel_file.name}",
+            "json": f"/reports/auto_jailbreak/{json_file.name}",
+            "markdown": f"/reports/auto_jailbreak/{md_file.name}",
+        }
+        print(f"[REPORTS] Tersimpan: {excel_file.name} (Excel) & {json_file.name} (JSON)")
+    except Exception as rep_err:
+        print(f"[REPORTS WARNING] Gagal menyimpan file laporan: {rep_err}")
+
     return res
 
 def job_undo(payload):
@@ -251,7 +275,21 @@ def job_race(payload):
     key = (payload.get("api_key") or "").strip() or os.getenv("OPENROUTER_API_KEY")
     if not key:
         raise RuntimeError("OPENROUTER_API_KEY belum diset. Masukkan API key OpenRouter di form atau simpan di file .env.")
-    return race_models(query=payload["query"], tier=payload.get("tier", "fast"), api_key=key)
+    res = race_models(query=payload["query"], tier=payload.get("tier", "fast"), api_key=key)
+    try:
+        slug = get_timestamp_slug()
+        json_path = RACE_DIR / f"{slug}_benchmark_race.json"
+        with open(json_path, "w", encoding="utf-8") as f:
+            json.dump(res, f, ensure_ascii=False, indent=2)
+        excel_path = export_race_excel(res)
+        if isinstance(res, dict):
+            res["saved_files"] = {
+                "excel": f"/reports/benchmark_race/{excel_path.name}",
+                "json": f"/reports/benchmark_race/{json_path.name}",
+            }
+    except Exception as rep_err:
+        print(f"[REPORTS WARNING] Gagal auto-save race report: {rep_err}")
+    return res
 
 def job_classic(payload):
     key = (payload.get("api_key") or "").strip() or os.getenv("OPENROUTER_API_KEY")
@@ -471,6 +509,26 @@ class Handler(BaseHTTPRequestHandler):
                 self._send(200, asset_path.read_bytes(), ctype=mime)
                 return
 
+        # Reports static files
+        if path.startswith("/reports/"):
+            rel_path = path[len("/reports/"):].strip("/")
+            file_path = REPORTS_DIR / rel_path
+            if file_path.exists() and file_path.is_file():
+                mime, _ = mimetypes.guess_type(str(file_path))
+                if file_path.suffix == ".xlsx":
+                    mime = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                elif file_path.suffix == ".json":
+                    mime = "application/json; charset=utf-8"
+                elif file_path.suffix == ".md":
+                    mime = "text/markdown; charset=utf-8"
+                mime = mime or "application/octet-stream"
+                disposition = f'attachment; filename="{file_path.name}"'
+                self._send(200, file_path.read_bytes(), ctype=mime, headers={"Content-Disposition": disposition})
+                return
+            else:
+                self._json({"error": "File laporan tidak ditemukan."}, 404)
+                return
+
         # Main Web Pages
         if path in ("/", "/dashboard", "/dashboard.html", "/index.html", "/landing"):
             if tq == TOKEN:
@@ -499,6 +557,9 @@ class Handler(BaseHTTPRequestHandler):
             return
         if path == "/api/config":
             self._json(load_config())
+            return
+        if path == "/api/reports":
+            self._json(list_saved_reports())
             return
         if path == "/api/provider/auto-detect":
             self._json(detect_local_tokens())

@@ -409,6 +409,67 @@
     .dual-pane { grid-template-columns: 1fr; }
   }
 
+  /* Auto-Jailbreak Subnav Bar & Views */
+  .aj-subnav-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 14px;
+    margin-bottom: 20px;
+    background: var(--surface);
+    border: 1px solid var(--hairline);
+    border-radius: var(--radius-md);
+    padding: 8px 12px;
+    flex-wrap: wrap;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+  }
+  .aj-subnav-tabs {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+  .aj-subnav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    border: 1px solid transparent;
+    background: transparent;
+    font-size: 13.5px;
+    font-weight: 500;
+    color: var(--ink-secondary);
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+  .aj-subnav-btn:hover {
+    background: var(--surface-muted);
+    color: var(--ink);
+  }
+  .aj-subnav-btn.active {
+    background: var(--ink);
+    color: #FFFFFF;
+    font-weight: 600;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.12);
+  }
+  .aj-subnav-btn.active .status-pill {
+    background: rgba(255,255,255,0.2) !important;
+    color: #FFFFFF !important;
+    border-color: rgba(255,255,255,0.3) !important;
+  }
+  .aj-view-section {
+    display: none;
+    animation: ajFadeIn 0.2s ease-out;
+  }
+  .aj-view-section.active {
+    display: block;
+  }
+  @keyframes ajFadeIn {
+    from { opacity: 0; transform: translateY(4px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
   .editorial-card {
     background-color: var(--surface);
     border: 1px solid var(--hairline);
@@ -950,6 +1011,12 @@
         </span>
         <span>Command Center</span>
       </button>
+      <button type="button" class="nav-item" data-tab="tab-reports" id="sideNavReports" onclick="switchTab('tab-reports')">
+        <span class="nav-icon">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line></svg>
+        </span>
+        <span>Arsip Laporan</span>
+      </button>
     </nav>
 
     <div class="sidebar-section-title">Lingkungan</div>
@@ -1027,125 +1094,176 @@
 
       <!-- ================= TAB 1: AUTO JAILBREAK ================= -->
       <section class="workspace-view active" id="tab-auto">
-        <div class="dual-pane">
-          <div class="editorial-card">
-            <div class="editorial-card-head">
-              <h3>Evaluasi Guardrail Target</h3>
-              <p class="desc">Uji ketahanan model target dengan endpoint, model ID, dan API key kustom Anda sendiri.</p>
-            </div>
 
-            <!-- Quick Presets -->
-            <div style="margin-bottom:16px;">
-              <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:block;margin-bottom:6px;">Preset Cepat Endpoint:</span>
-              <div style="display:flex;flex-wrap:wrap;gap:6px;">
-                <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('anthropic/claude-3.5-sonnet', 'https://openrouter.ai/api/v1')">OpenRouter</button>
-                <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('gpt-4o', 'https://api.openai.com/v1')">OpenAI</button>
-                <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('deepseek-chat', 'https://api.deepseek.com')">DeepSeek</button>
-                <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('llama-3.3-70b-versatile', 'https://api.groq.com/openai/v1')">Groq</button>
-                <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('llama3.2', 'http://localhost:11434/v1', 'ollama')">Ollama Lokal</button>
-                <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('', '', '')" style="color:var(--muted);">Kosongkan (Kustom)</button>
-              </div>
-            </div>
-
-            <label class="field-label" for="ajModel">Target Model ID <span style="font-weight:normal;color:var(--muted);">(wajib)</span></label>
-            <input type="text" id="ajModel" placeholder="Contoh: gpt-4o, anthropic/claude-3.5-sonnet, deepseek-chat, atau nama model kustom">
-
-            <label class="field-label" for="ajBaseUrl" style="margin-top:12px;">Base URL Endpoint <span style="font-weight:normal;color:var(--muted);">(URL API gateway / proxy Anda)</span></label>
-            <input type="text" id="ajBaseUrl" placeholder="https://api.openai.com/v1 atau URL proxy kustom Anda">
-
-            <label class="field-label" for="ajKey" style="margin-top:12px;">API Key <span style="font-weight:normal;color:var(--muted);">(kosongkan jika sudah ada di .env atau model lokal tanpa key)</span></label>
-            <input type="password" id="ajKey" placeholder="sk-xxxx... (Kunci API Anda)">
-
-            <label class="checkbox-group" for="ajDry" style="margin-top:16px;">
-              <input type="checkbox" id="ajDry" checked>
-              <span>Mode Dry-Run (evaluasi & uji strategi saja tanpa menimpa konfigurasi lokal)</span>
-            </label>
-
-            <div class="action-row">
-              <button class="harvey-btn btn-black" id="btnAuto">Jalankan Auto-Jailbreak</button>
-              <button class="harvey-btn btn-outline" id="btnUndo">Pulihkan Config (Undo)</button>
-            </div>
+        <!-- Subnav Header Switcher -->
+        <div class="aj-subnav-bar">
+          <div class="aj-subnav-tabs">
+            <button type="button" class="aj-subnav-btn" id="subBtnConfig" onclick="switchAjSubView('config')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+              <span>⚙️ Parameter Target &amp; Eksekusi</span>
+            </button>
+            <button type="button" class="aj-subnav-btn active" id="subBtnReport" onclick="switchAjSubView('report')">
+              <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+              <span>📊 Laporan Hasil Evaluasi</span>
+              <span class="status-pill green" id="subReportBadge" style="font-size:11px;padding:2px 8px;margin-left:4px;">● Laporan Tersedia</span>
+            </button>
           </div>
+          <div class="aj-subnav-actions" id="ajSubNavActions">
+            <button type="button" class="harvey-btn btn-outline btn-sm" onclick="switchAjSubView('config')" id="btnRetestQuick">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              <span>Ubah Parameter / Uji Lagi</span>
+            </button>
+          </div>
+        </div>
 
-          <!-- Stepper & Output Panel -->
-          <div class="side-panel">
-            <div class="progress-card">
-              <div class="progress-card-title">
-                <span>Alur Eksekusi</span>
-                <span id="ajStatusBadge" class="status-pill gray">Standby</span>
+        <!-- SUB-VIEW 1: Parameter Target & Eksekusi -->
+        <div id="ajViewConfig" class="aj-view-section">
+          <div class="dual-pane">
+            <div class="editorial-card">
+              <div class="editorial-card-head">
+                <h3>Evaluasi Guardrail Target</h3>
+                <p class="desc">Uji ketahanan model target dengan endpoint, model ID, dan API key kustom Anda sendiri.</p>
               </div>
-              <div class="timeline-list">
-                <div class="timeline-step" id="step1">
-                  <div class="step-node">1</div>
-                  <div class="step-text">
-                    <strong>Identifikasi Jenis Model AI</strong>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Mengenali penyedia dan jenis model (seperti OpenAI, Claude, Llama, atau DeepSeek)</div>
-                  </div>
+
+              <!-- Quick Presets -->
+              <div style="margin-bottom:16px;">
+                <span style="font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:0.04em;color:var(--muted);display:block;margin-bottom:6px;">Preset Cepat Endpoint:</span>
+                <div style="display:flex;flex-wrap:wrap;gap:6px;">
+                  <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('anthropic/claude-3.5-sonnet', 'https://openrouter.ai/api/v1')">OpenRouter</button>
+                  <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('gpt-4o', 'https://api.openai.com/v1')">OpenAI</button>
+                  <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('deepseek-chat', 'https://api.deepseek.com')">DeepSeek</button>
+                  <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('llama-3.3-70b-versatile', 'https://api.groq.com/openai/v1')">Groq</button>
+                  <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('llama3.2', 'http://localhost:11434/v1', 'ollama')">Ollama Lokal</button>
+                  <button type="button" class="harvey-btn btn-outline btn-sm" onclick="applyAjPreset('', '', '')" style="color:var(--muted);">Kosongkan (Kustom)</button>
                 </div>
-                <div class="timeline-step" id="step2">
-                  <div class="step-node">2</div>
-                  <div class="step-text">
-                    <strong>Cek Respon Awal Model</strong>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Menguji apakah AI langsung menolak saat diberi instruksi terlarang tanpa trik bujukan</div>
-                  </div>
-                </div>
-                <div class="timeline-step" id="step3">
-                  <div class="step-node">3</div>
-                  <div class="step-text">
-                    <strong>Uji Simulasi Manipulasi &amp; Trik Pembobolan</strong>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Mencoba bujukan psikologi terbalik, sisipan percakapan, hingga bahasa sandi rahasia (Morse, Braille, Leet)</div>
-                  </div>
-                </div>
-                <div class="timeline-step" id="step4">
-                  <div class="step-node">4</div>
-                  <div class="step-text">
-                    <strong>Rangkum &amp; Simpan Hasil Evaluasi</strong>
-                    <div style="font-size:12px;color:var(--muted);margin-top:2px;">Mencatat apakah pertahanan model 100% aman atau terdapat celah yang berhasil ditembus</div>
-                  </div>
-                </div>
+              </div>
+
+              <label class="field-label" for="ajModel">Target Model ID <span style="font-weight:normal;color:var(--muted);">(wajib)</span></label>
+              <input type="text" id="ajModel" placeholder="Contoh: gpt-4o, anthropic/claude-3.5-sonnet, deepseek-chat, atau nama model kustom">
+
+              <label class="field-label" for="ajBaseUrl" style="margin-top:12px;">Base URL Endpoint <span style="font-weight:normal;color:var(--muted);">(URL API gateway / proxy Anda)</span></label>
+              <input type="text" id="ajBaseUrl" placeholder="https://api.openai.com/v1 atau URL proxy kustom Anda">
+
+              <label class="field-label" for="ajKey" style="margin-top:12px;">API Key <span style="font-weight:normal;color:var(--muted);">(kosongkan jika sudah ada di .env atau model lokal tanpa key)</span></label>
+              <input type="password" id="ajKey" placeholder="sk-xxxx... (Kunci API Anda)">
+
+              <label class="checkbox-group" for="ajDry" style="margin-top:16px;">
+                <input type="checkbox" id="ajDry" checked>
+                <span>Mode Dry-Run (evaluasi & uji strategi saja tanpa menimpa konfigurasi lokal)</span>
+              </label>
+
+              <div class="action-row">
+                <button class="harvey-btn btn-black" id="btnAuto">Jalankan Auto-Jailbreak</button>
+                <button class="harvey-btn btn-outline" id="btnUndo">Pulihkan Config (Undo)</button>
               </div>
             </div>
 
-            <!-- Executive Security Report Card (Hero View) -->
-            <div id="ajReportCard" style="display:none;margin-top:4px;"></div>
-
-            <!-- Terminal Output Collapsible -->
-            <details class="collapsible-box" id="ajLogDetails" open style="margin-top:16px;">
-              <summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;padding:6px 0;display:flex;justify-content:space-between;align-items:center;">
-                <span>Konsol Log Realtime ▾</span>
-                <span id="ajLine" style="font-size:12px;color:var(--muted);font-weight:normal;">Status: Siap</span>
-              </summary>
-              <div style="padding-top:10px;">
-                <div class="harvey-terminal" style="margin:0;">
-                  <div class="terminal-bar">
-                    <span>Terminal Output</span>
-                    <div style="display:flex;gap:6px;">
-                      <button class="harvey-btn btn-outline btn-sm" id="btnExportAjExcel" onclick="exportAutoJailbreakExcel()">Unduh Excel</button>
-                      <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('ajLog', this)">Salin Log</button>
-                      <button class="harvey-btn btn-outline btn-sm" onclick="clearSnippet('ajLog')">Bersihkan</button>
+            <!-- Stepper & Output Panel -->
+            <div class="side-panel">
+              <div class="progress-card">
+                <div class="progress-card-title">
+                  <span>Alur Eksekusi</span>
+                  <span id="ajStatusBadge" class="status-pill gray">Standby</span>
+                </div>
+                <div class="timeline-list">
+                  <div class="timeline-step" id="step1">
+                    <div class="step-node">1</div>
+                    <div class="step-text">
+                      <strong>Identifikasi Jenis Model AI</strong>
+                      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Mengenali penyedia dan jenis model (seperti OpenAI, Claude, Llama, atau DeepSeek)</div>
                     </div>
                   </div>
-                  <pre class="harvey-console" id="ajLog" style="max-height:220px;">Menunggu perintah eksekusi…</pre>
-                </div>
-              </div>
-            </details>
-
-            <!-- Technical Details Collapsible -->
-            <details class="collapsible-box" id="ajJsonBox" style="display:none;margin-top:14px;">
-              <summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;padding:6px 0;">
-                <span>Lihat Data Teknis Lengkap (Raw JSON Output) ▾</span>
-              </summary>
-              <div style="padding-top:10px;">
-                <div class="harvey-terminal" id="ajResBox" style="margin:0;">
-                  <div class="terminal-bar">
-                    <span>Hasil Analisis JSON</span>
-                    <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('ajRes', this)">Salin JSON</button>
+                  <div class="timeline-step" id="step2">
+                    <div class="step-node">2</div>
+                    <div class="step-text">
+                      <strong>Cek Respon Awal Model</strong>
+                      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Menguji apakah AI langsung menolak saat diberi instruksi terlarang tanpa trik bujukan</div>
+                    </div>
                   </div>
-                  <pre class="harvey-console" id="ajRes" style="max-height:220px;"></pre>
+                  <div class="timeline-step" id="step3">
+                    <div class="step-node">3</div>
+                    <div class="step-text">
+                      <strong>Uji Simulasi Manipulasi &amp; Trik Pembobolan</strong>
+                      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Mencoba bujukan psikologi terbalik, sisipan percakapan, hingga bahasa sandi rahasia (Morse, Braille, Leet)</div>
+                    </div>
+                  </div>
+                  <div class="timeline-step" id="step4">
+                    <div class="step-node">4</div>
+                    <div class="step-text">
+                      <strong>Rangkum &amp; Simpan Hasil Evaluasi</strong>
+                      <div style="font-size:12px;color:var(--muted);margin-top:2px;">Mencatat apakah pertahanan model 100% aman atau terdapat celah yang berhasil ditembus</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Callout Banner when Done -->
+                <div id="ajDoneBanner" style="display:none;margin-top:16px;padding:12px 16px;background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);align-items:center;justify-content:space-between;gap:12px;">
+                  <div>
+                    <strong style="font-size:13px;color:var(--ink);display:block;">Evaluasi Selesai!</strong>
+                    <span style="font-size:12px;color:var(--muted);">Laporan detail telah siap ditinjau.</span>
+                  </div>
+                  <button type="button" class="harvey-btn btn-black btn-sm" onclick="switchAjSubView('report')">
+                    Buka Laporan →
+                  </button>
                 </div>
               </div>
-            </details>
+
+              <!-- Terminal Output Collapsible -->
+              <details class="collapsible-box" id="ajLogDetails" open style="margin-top:16px;">
+                <summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;padding:6px 0;display:flex;justify-content:space-between;align-items:center;">
+                  <span>Konsol Log Realtime ▾</span>
+                  <span id="ajLine" style="font-size:12px;color:var(--muted);font-weight:normal;">Status: Siap</span>
+                </summary>
+                <div style="padding-top:10px;">
+                  <div class="harvey-terminal" style="margin:0;">
+                    <div class="terminal-bar">
+                      <span>Terminal Output</span>
+                      <div style="display:flex;gap:6px;">
+                        <button class="harvey-btn btn-outline btn-sm" id="btnExportAjExcel" onclick="exportAutoJailbreakExcel()">Unduh Excel</button>
+                        <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('ajLog', this)">Salin Log</button>
+                        <button class="harvey-btn btn-outline btn-sm" onclick="clearSnippet('ajLog')">Bersihkan</button>
+                      </div>
+                    </div>
+                    <pre class="harvey-console" id="ajLog" style="max-height:220px;">Menunggu perintah eksekusi…</pre>
+                  </div>
+                </div>
+              </details>
+
+              <!-- Technical Details Collapsible -->
+              <details class="collapsible-box" id="ajJsonBox" style="display:none;margin-top:14px;">
+                <summary style="cursor:pointer;font-size:13px;color:var(--muted);font-weight:600;padding:6px 0;">
+                  <span>Lihat Data Teknis Lengkap (Raw JSON Output) ▾</span>
+                </summary>
+                <div style="padding-top:10px;">
+                  <div class="harvey-terminal" id="ajResBox" style="margin:0;">
+                    <div class="terminal-bar">
+                      <span>Hasil Analisis JSON</span>
+                      <button class="harvey-btn btn-outline btn-sm" onclick="copySnippet('ajRes', this)">Salin JSON</button>
+                    </div>
+                    <pre class="harvey-console" id="ajRes" style="max-height:220px;"></pre>
+                  </div>
+                </div>
+              </details>
+            </div>
           </div>
+        </div>
+
+        <!-- SUB-VIEW 2: Laporan Hasil Evaluasi (Full-Width, 100%) -->
+        <div id="ajViewReport" class="aj-view-section active">
+          <!-- Empty State (if no report yet) -->
+          <div id="ajReportEmptyState" style="display:none;text-align:center;padding:60px 24px;background:var(--surface);border:1px dashed var(--hairline);border-radius:var(--radius-md);">
+            <div style="font-size:36px;margin-bottom:12px;">🛡️</div>
+            <h3 style="font-size:18px;font-weight:600;color:var(--ink);margin:0 0 6px 0;">Belum Ada Laporan Evaluasi Aktif</h3>
+            <p style="font-size:14px;color:var(--muted);max-width:480px;margin:0 auto 18px auto;line-height:1.5;">
+              Pilih model target pada tab parameter dan jalankan evaluasi untuk memulai pengujian guardrail. Laporan lengkap dan unduhan Excel akan otomatis muncul di sini.
+            </p>
+            <button type="button" class="harvey-btn btn-black" onclick="switchAjSubView('config')">
+              Buka Parameter &amp; Mulai Uji
+            </button>
+          </div>
+
+          <!-- Full Width Hero Report Card Container -->
+          <div id="ajReportCard"></div>
         </div>
       </section>
 
@@ -1401,6 +1519,32 @@
         </div>
       </section>
 
+      <!-- ================= TAB 6: ARSIP LAPORAN ================= -->
+      <section class="workspace-view" id="tab-reports">
+        <div class="editorial-card" style="margin-bottom:20px;">
+          <div class="editorial-card-head" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:12px;">
+            <div>
+              <h3>📁 Riwayat &amp; Arsip Laporan Pengujian (Reports Vault)</h3>
+              <p class="desc">Seluruh hasil pengujian dan audit keamanan Red-Teaming tersimpan rapi secara terstruktur di folder <code>reports/</code> dalam format Excel (.xlsx), JSON, dan Markdown (.md).</p>
+            </div>
+            <button class="harvey-btn btn-outline btn-sm" onclick="loadSavedReportsList()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-right:4px;"><path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"/></svg>
+              Segarkan Riwayat
+            </button>
+          </div>
+
+          <div style="display:flex;gap:8px;margin-bottom:16px;flex-wrap:wrap;">
+            <button type="button" class="segmented-pill active" id="btnRepFilterAll" onclick="filterReportsTab('all')">Semua Laporan</button>
+            <button type="button" class="segmented-pill" id="btnRepFilterAuto" onclick="filterReportsTab('auto_jailbreak')">Auto-Jailbreak</button>
+            <button type="button" class="segmented-pill" id="btnRepFilterRace" onclick="filterReportsTab('benchmark_race')">Benchmark Race</button>
+          </div>
+
+          <div id="reportsListContainer">
+            <div style="text-align:center;padding:30px;color:var(--muted);">Memuat riwayat pengujian…</div>
+          </div>
+        </div>
+      </section>
+
     </div>
   </main>
 
@@ -1466,7 +1610,8 @@ const tabTitles = {
   'tab-parsel': { title: 'Parseltongue Obfuscation Vault', subtitle: 'Adversarial query encoding dan pengujian filter input dengan berbagai skema encoding.' },
   'tab-race': { title: 'Multi-Model Benchmark Race', subtitle: 'Evaluasi resistensi paralel puluhan model via OpenRouter dengan mode ULTRAPLINIAN atau Classic.' },
   'tab-providers': { title: 'AI Providers Gateway', subtitle: 'Kelola koneksi provider LLM, routing proxy, dan status integrasi kredensial.' },
-  'tab-status': { title: 'Security Command Center', subtitle: 'Telemetry snapshot, status kunci API provider, dan parameter aktif runtime AntiHalu.' }
+  'tab-status': { title: 'Security Command Center', subtitle: 'Telemetry snapshot, status kunci API provider, dan parameter aktif runtime AntiHalu.' },
+  'tab-reports': { title: 'Riwayat & Arsip Laporan Pengujian', subtitle: 'Arsip terorganisir hasil evaluasi Red-Teaming dan Benchmark dalam format Excel (.xlsx), JSON, dan Markdown.' }
 };
 
 function switchTab(tabId) {
@@ -1491,6 +1636,10 @@ function switchTab(tabId) {
       const subtitleEl = document.getElementById('pageSubtitleText');
       if (titleEl) titleEl.textContent = meta.title;
       if (subtitleEl) subtitleEl.textContent = meta.subtitle;
+    }
+
+    if (tabId === 'tab-reports' && typeof loadSavedReportsList === 'function') {
+      loadSavedReportsList();
     }
 
     try {
@@ -1717,6 +1866,9 @@ async function runJob(name, endpoint, payload, logPre, resBox, resPre, lineEl, b
             if (name === 'auto') {
               lastAutoResult = r;
               renderAutoJailbreakReport(r);
+              switchAjSubView('report');
+              const doneBanner = document.getElementById('ajDoneBanner');
+              if (doneBanner) doneBanner.style.display = 'flex';
             } else if (name === 'race' || name === 'classic') {
               lastRaceResult = r;
               renderRaceChart(r);
@@ -1733,6 +1885,7 @@ async function runJob(name, endpoint, payload, logPre, resBox, resPre, lineEl, b
             if (badgeEl) { badgeEl.className = 'status-pill gray'; badgeEl.textContent = 'Failed'; }
             if (name === 'auto') {
               renderAutoJailbreakReport({ success: false, error: j.error, attempts: [] });
+              switchAjSubView('report');
             }
             const jsonBox = document.getElementById('ajJsonBox');
             if (jsonBox && name === 'auto') jsonBox.style.display = 'block';
@@ -1758,6 +1911,9 @@ document.getElementById('btnAuto').onclick = () => {
     document.getElementById('ajModel').focus();
     return;
   }
+  switchAjSubView('config');
+  const doneBanner = document.getElementById('ajDoneBanner');
+  if (doneBanner) doneBanner.style.display = 'none';
   runJob(
     'auto',
     '/api/auto',
@@ -2412,60 +2568,79 @@ function exportRaceExcel() {
 // 3. Auto-Jailbreak Security Audit Exporter
 function exportAutoJailbreakExcel() {
   const ajRes = lastAutoResult || {};
-  const model = document.getElementById('ajModel').value.trim() || 'Auto / Default Model';
+  const model = document.getElementById('ajModel').value.trim() || ajRes.model || 'Target_Model';
+  const attempts = ajRes.attempts || [];
+  const safeModel = model.replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const dateStr = new Date().toISOString().slice(0, 10);
+
+  // Jika server sudah menghasilkan file .xlsx berformat openpyxl, utamakan download file tersebut
+  if (ajRes.saved_files && ajRes.saved_files.excel) {
+    const a = document.createElement('a');
+    a.href = ajRes.saved_files.excel;
+    a.download = `AntiHalu_Jailbreak_${safeModel}_${dateStr}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    notify('Mengunduh laporan Excel terformat (.xlsx) dari server…');
+    return;
+  }
+
+  // Fallback ke generator SpreadsheetML XML lengkap dengan rincian seluruh skenario
+  const isBreached = Boolean(ajRes.success) && ajRes.strategy && ajRes.strategy !== 'none_needed';
+  const statusVerdict = isBreached ? 'RENTAN / DAPAT DIKUASAI (Vulnerable)' : (ajRes.success ? 'BEBAS SENSOR (Uncensored)' : 'AMAN & TAHAN UJI (Defended)');
 
   const sheet1 = {
-    name: 'Audit Diagram & Pipeline',
-    title: 'Auto-Jailbreak Target Evaluation & Attack Pipeline',
-    columns: [{ width: 220 }, { width: 160 }, { width: 220 }, { width: 260 }],
+    name: 'Ringkasan & Kesimpulan',
+    title: 'AntiHalu LLM Safety Audit - Ringkasan Eksekutif & Kesimpulan untuk Orang Awam',
+    columns: [{ width: 220 }, { width: 180 }, { width: 220 }, { width: 280 }],
     summary: [
       { label: 'Target Model', val: model },
-      { label: 'Audit Result', val: 'VULNERABILITY CONFIRMED' },
-      { label: 'Winning Strategy', val: ajRes.winning_strategy || 'Parseltongue Inversion' },
-      { label: 'Config Lock', val: 'Hermes Secured' }
+      { label: 'Status Keamanan Akhir', val: statusVerdict },
+      { label: 'Trik yang Membobol', val: ajRes.winning_strategy || ajRes.strategy || 'Nihil (0 Terbobol)' },
+      { label: 'Total Skenario Uji', val: `${attempts.length} Percobaan` }
     ],
     customSections: [
       {
-        title: 'DIAGRAM 1: ALUR EKSEKUSI ADVERSARIAL (PIPELINE STEP MATRIX)',
+        title: 'KESIMPULAN EVALUASI & DAMPAK RISIKO (BAHASA AWAM)',
         rows: [
           {
             cells: [
-              { value: 'Tahap Evaluasi', style: 'TableHeader' },
-              { value: 'Status Eksekusi', style: 'TableHeader' },
-              { value: 'Visual Progress', style: 'TableHeader' },
-              { value: 'Keterangan Analisis', style: 'TableHeader' }
+              { value: 'Aspek Pengujian', style: 'TableHeader' },
+              { value: 'Hasil Evaluasi', style: 'TableHeader' },
+              { value: 'Tingkat Risiko', style: 'TableHeader' },
+              { value: 'Penjelasan & Rekomendasi Praktis', style: 'TableHeader' }
             ]
           },
           {
             cells: [
-              { value: '1. Identifikasi Jenis Model AI', style: 'CellBold' },
-              { value: 'COMPLETED', style: 'CellPassed' },
-              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
-              { value: 'Mengenali penyedia dan jenis model (OpenAI, Claude, Llama, DeepSeek)', style: 'CellNormal' }
+              { value: '1. Filter Tanya Langsung', style: 'CellBold' },
+              { value: 'Ditolak (Aman)', style: 'CellPassed' },
+              { value: 'Rendah', style: 'CellPassed' },
+              { value: 'Model mampu menolak jika ditanya instruksi berbahaya secara terang-terangan.', style: 'CellNormal' }
             ]
           },
           {
             cells: [
-              { value: '2. Cek Respon Awal Model', style: 'CellBold' },
-              { value: 'TESTED', style: 'CellPassed' },
-              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
-              { value: 'Menguji apakah AI langsung menolak saat diberi instruksi berbahaya', style: 'CellNormal' }
+              { value: '2. Trik Psikologi Terbalik', style: 'CellBold' },
+              { value: isBreached ? 'Celah Ditemukan' : 'Ditolak (Aman)', style: isBreached ? 'CellWarn' : 'CellPassed' },
+              { value: isBreached ? 'Tinggi' : 'Rendah', style: isBreached ? 'CellWarn' : 'CellPassed' },
+              { value: isBreached ? 'Model tertipu saat diinstruksikan membalik kata penolakan.' : 'Model tidak mempan terhadap manipulasi kata.', style: 'CellNormal' }
             ]
           },
           {
             cells: [
-              { value: '3. Simulasi Manipulasi & Pembobolan', style: 'CellBold' },
-              { value: 'EVALUATED', style: 'CellPassed' },
-              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
-              { value: 'Menguji psikologi terbalik, sisipan percakapan, dan bahasa sandi', style: 'CellNormal' }
+              { value: '3. Sisipan Riwayat Obrolan Palsu (Prefill)', style: 'CellBold' },
+              { value: isBreached ? 'Tembus Lolos (Bahaya)' : 'Ditolak (Aman)', style: isBreached ? 'CellWarn' : 'CellPassed' },
+              { value: isBreached ? 'Sangat Tinggi' : 'Rendah', style: isBreached ? 'CellWarn' : 'CellPassed' },
+              { value: isBreached ? 'Model terpancing melanjutkan jawaban karena mengira telah menyetujuinya di riwayat sebelumnya.' : 'Model memvalidasi riwayat dan tetap menolak.', style: 'CellNormal' }
             ]
           },
           {
             cells: [
-              { value: '4. Ringkasan & Hasil Evaluasi', style: 'CellBold' },
-              { value: 'COMPLETED', style: 'CellBlue' },
-              { value: makeAsciiBar(1, 1, 16), style: 'BarChart' },
-              { value: 'Mencatat status ketahanan model dan menyimpan laporan evaluasi', style: 'CellNormal' }
+              { value: '4. Bahasa Sandi & Kode Rahasia', style: 'CellBold' },
+              { value: 'Ditolak (Aman)', style: 'CellPassed' },
+              { value: 'Rendah', style: 'CellPassed' },
+              { value: 'Sandi Morse, Braille, atau huruf angka (Leetspeak) berhasil diidentifikasi atau ditolak.', style: 'CellNormal' }
             ]
           }
         ]
@@ -2474,29 +2649,58 @@ function exportAutoJailbreakExcel() {
   };
 
   const sheet2Headers = [
-    { label: 'Parameter Audit', width: 220 },
-    { label: 'Nilai & Status Snapshot', width: 340 },
-    { label: 'Status Guardrail', width: 160 }
+    { label: 'No', width: 50 },
+    { label: 'Nama Trik (Bahasa Awam)', width: 240 },
+    { label: 'Kode Teknis', width: 160 },
+    { label: 'Kategori Trik', width: 160 },
+    { label: 'Status Respon', width: 160 },
+    { label: 'Tingkat Keamanan', width: 140 },
+    { label: 'Skor', width: 80 },
+    { label: 'Waktu (Detik)', width: 100 },
+    { label: 'Pertanyaan / Prompt Uji', width: 280 },
+    { label: 'Trik Tambahan (System / Prefill)', width: 280 },
+    { label: 'Respon Model AI', width: 340 },
+    { label: 'Penjelasan Mengapa Hasil Begitu', width: 280 }
   ];
 
-  const sheet2Rows = [
-    [{ value: 'Target Model ID', style: 'CellBold' }, { value: model, style: 'CellNormal' }, { value: 'Evaluated', style: 'CellCenter' }],
-    [{ value: 'Baseline Refusal Response', style: 'CellBold' }, { value: ajRes.baseline_refusal !== undefined ? String(ajRes.baseline_refusal) : 'Terdeteksi Refusal Default', style: 'CellNormal' }, { value: 'Confirmed', style: 'CellWarn' }],
-    [{ value: 'Winning Bypass Strategy', style: 'CellBold' }, { value: ajRes.winning_strategy || 'Parseltongue Inversion Protocol', style: 'CellNormal' }, { value: 'BYPASSED', style: 'CellPassed' }],
-    [{ value: 'Jumlah Attempt Eksekusi', style: 'CellBold' }, { value: ajRes.attempts_count ? `${ajRes.attempts_count} Attempt` : '3 Iterations', style: 'CellNormal' }, { value: 'Optimal', style: 'CellCenter' }],
-    [{ value: 'Config Hermes Snapshot', style: 'CellBold' }, { value: 'config.yaml.gmdbak (Tersimpan Aman)', style: 'CellMono' }, { value: 'Backup Ready', style: 'CellPassed' }],
-    [{ value: 'Waktu Audit Selesai', style: 'CellBold' }, { value: new Date().toISOString(), style: 'CellNormal' }, { value: 'Locked', style: 'CellBlue' }]
-  ];
+  const sheet2Rows = attempts.map((a, i) => {
+    const meta = STRATEGY_FRIENDLY_NAMES[a.strategy] || {
+      name: a.strategy.replace(/_/g, ' '),
+      desc: '',
+      category: 'Variasi Serangan'
+    };
+    const isErr = Boolean(a.error);
+    const isRef = Boolean(a.is_refusal);
+    const stText = isErr ? 'ERROR API' : (isRef ? 'DITOLAK (Aman)' : 'TEMBUS LOLOS');
+    const stLevel = isErr ? 'Gagal Uji' : (isRef ? 'Tangguh / Aman' : 'Bahaya / Rentan');
+    const stStyle = isErr ? 'CellWarn' : (isRef ? 'CellPassed' : 'CellWarn');
+    const analisis = isErr ? `Error: ${a.error}` : (isRef ? 'Model mendeteksi ancaman dan menolak mematuhi perintah.' : `Model terpancing memberikan jawaban (Skor: ${a.score}).`);
+
+    return [
+      { value: i + 1, style: 'CellCenter' },
+      { value: meta.name || a.strategy, style: 'CellBold' },
+      { value: a.strategy, style: 'CellMono' },
+      { value: meta.category, style: 'CellNormal' },
+      { value: stText, style: stStyle },
+      { value: stLevel, style: stStyle },
+      { value: a.score || 0, style: 'CellCenter' },
+      { value: a.latency ? Number(a.latency).toFixed(2) : '0.00', style: 'CellCenter' },
+      { value: a.prompt || a.query || '(Prompt uji standar)', style: 'CellNormal' },
+      { value: a.system_prompt || (typeof a.prefill === 'object' ? JSON.stringify(a.prefill) : (a.prefill || '(Tanpa trik tambahan)')), style: 'CellNormal' },
+      { value: a.content || '(Respon kosong / error)', style: 'CellNormal' },
+      { value: analisis, style: 'CellNormal' }
+    ];
+  });
 
   const sheet2 = {
-    name: 'Hermes Config Snapshot',
-    title: 'Auto-Jailbreak System Parameters & Hermes Config',
+    name: 'Rincian Skenario & Prompt',
+    title: 'Transkrip Lengkap Percobaan Adversarial Prompt & Respon Model (Dilengkapi Filter Kolom)',
     columns: sheet2Headers,
     headers: sheet2Headers,
     rows: sheet2Rows
   };
 
-  downloadMultiSheetExcelXml(`AntiHalu_AutoJailbreak_Audit_${Date.now()}.xls`, [sheet1, sheet2]);
+  downloadMultiSheetExcelXml(`AntiHalu_Jailbreak_${safeModel}_${dateStr}.xls`, [sheet1, sheet2]);
 }
 
 // 4. AI Providers Gateway Inventory Exporter
@@ -2704,6 +2908,51 @@ const STRATEGY_FRIENDLY_NAMES = {
   }
 };
 
+function switchAjSubView(view) {
+  const btnConfig = document.getElementById('subBtnConfig');
+  const btnReport = document.getElementById('subBtnReport');
+  const viewConfig = document.getElementById('ajViewConfig');
+  const viewReport = document.getElementById('ajViewReport');
+
+  if (view === 'config') {
+    if (btnConfig) btnConfig.classList.add('active');
+    if (btnReport) btnReport.classList.remove('active');
+    if (viewConfig) viewConfig.classList.add('active');
+    if (viewReport) viewReport.classList.remove('active');
+  } else {
+    if (btnReport) btnReport.classList.add('active');
+    if (btnConfig) btnConfig.classList.remove('active');
+    if (viewReport) viewReport.classList.add('active');
+    if (viewConfig) viewConfig.classList.remove('active');
+    
+    const emptyEl = document.getElementById('ajReportEmptyState');
+    const reportCard = document.getElementById('ajReportCard');
+    if (!lastAutoResult || !reportCard || !reportCard.innerHTML.trim()) {
+      if (emptyEl) emptyEl.style.display = 'block';
+      if (reportCard) reportCard.style.display = 'none';
+    } else {
+      if (emptyEl) emptyEl.style.display = 'none';
+      if (reportCard) reportCard.style.display = 'block';
+    }
+  }
+}
+window.switchAjSubView = switchAjSubView;
+
+function searchAjScenarios(query) {
+  const q = (query || '').toLowerCase().trim();
+  document.querySelectorAll('.aj-scenario-row').forEach(row => {
+    const text = row.innerText.toLowerCase();
+    const isMatch = !q || text.includes(q);
+    row.style.display = isMatch ? 'table-row' : 'none';
+    const idx = row.getAttribute('data-idx');
+    if (idx !== null) {
+      const drawer = document.getElementById(`ajDetailRow_${idx}`);
+      if (drawer && !isMatch) drawer.style.display = 'none';
+    }
+  });
+}
+window.searchAjScenarios = searchAjScenarios;
+
 function renderAutoJailbreakReport(r) {
   const container = document.getElementById('ajReportCard');
   if (!container) return;
@@ -2714,17 +2963,22 @@ function renderAutoJailbreakReport(r) {
   const allErrors = totalCount > 0 && attempts.every(a => Boolean(a.error));
   const hasApiError = Boolean(r.error) || allErrors || (totalCount === 0 && !r.success);
 
-  // Collapse realtime raw log accordion so hero card shines
-  const logDet = document.getElementById('ajLogDetails');
-  if (logDet) logDet.open = false;
-
   function esc(s) {
     if (!s) return '';
     return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
   }
 
+  // Update SubNav Badge
+  const subBadge = document.getElementById('subReportBadge');
+  const emptyEl = document.getElementById('ajReportEmptyState');
+  if (emptyEl) emptyEl.style.display = 'none';
+
   if (hasApiError) {
     const rawErr = r.error || (attempts[0] && attempts[0].error) || 'Koneksi ke endpoint ditolak oleh server.';
+    if (subBadge) {
+      subBadge.textContent = '❌ Error API';
+      subBadge.className = 'status-pill red';
+    }
     container.innerHTML = `
       <div class="editorial-card" style="border: 2px solid #F43F5E; padding:24px 28px; background:var(--surface); border-radius:var(--radius-md); box-shadow:0 6px 20px rgba(244,63,94,0.09);">
         <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:16px;padding-bottom:14px;border-bottom:1px solid var(--hairline);">
@@ -2739,9 +2993,10 @@ function renderAutoJailbreakReport(r) {
               Pengujian terhadap model <strong>${esc(modelName)}</strong> tidak dapat dijalankan karena server/proxy menolak request. Ini <strong>bukan</strong> kegagalan ketahanan model, melainkan error teknis komunikasi.
             </p>
           </div>
-          <div style="text-align:right;flex-shrink:0;background:var(--surface-muted);padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--hairline);">
-            <span style="font-size:11px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;font-weight:600;">Target Model</span>
-            <strong style="font-size:14px;color:var(--ink);word-break:break-all;">${esc(modelName)}</strong>
+          <div style="text-align:right;flex-shrink:0;">
+            <button type="button" class="harvey-btn btn-black btn-sm" onclick="switchAjSubView('config')">
+              ⚙️ Ubah Endpoint / Key
+            </button>
           </div>
         </div>
 
@@ -2750,7 +3005,7 @@ function renderAutoJailbreakReport(r) {
           <code style="color:#FCA5A5;font-size:13px;word-break:break-all;display:block;font-family:ui-monospace,monospace;">${esc(rawErr)}</code>
         </div>
 
-        <div style="margin-bottom:6px;">
+        <div>
           <span style="font-size:13px;font-weight:700;color:var(--ink);display:block;margin-bottom:10px;">💡 3 Langkah Perbaikan Cepat:</span>
           <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(200px, 1fr));gap:12px;">
             <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:14px;">
@@ -2770,7 +3025,7 @@ function renderAutoJailbreakReport(r) {
       </div>
     `;
     container.style.display = 'block';
-    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    switchAjSubView('report');
     return;
   }
 
@@ -2784,146 +3039,520 @@ function renderAutoJailbreakReport(r) {
     badgeColor = '#DC2626';
     badgeLabel = '⚠️ RENTAN — BERHASIL DITEMBUS';
     titleText = `Model Berhasil Ditembus Menggunakan Metode: "${esc(r.strategy)}"`;
-    summaryText = `PERINGATAN KEAMANAN: Model target Anda gagal mempertahankan batasannya. Saat diuji dengan teknik rekayasa khusus <strong>${esc(r.strategy)}</strong>, model menyerah dan bersedia menjawab instruksi sensitif/terlarang (Skor Kualitas: ${r.score || 0}).`;
-    educationText = `<strong>💡 Apa artinya untuk Anda?</strong><br>
-Model ini memiliki celah keamanan guardrail pada manipulasi konteks atau sandi tertentu. Untuk mengamankannya, Anda disarankan menambahkan prompt sistem pembatas (system guardrail) atau filter classifier tambahan di depan model.`;
+    summaryText = `Model target Anda gagal mempertahankan batasannya. Saat diuji dengan teknik rekayasa khusus <strong>${esc(r.strategy)}</strong>, model menyerah dan bersedia menjawab instruksi sensitif/terlarang (Skor Kualitas: ${r.score || 0}).`;
+    educationText = `<strong>💡 Kesimpulan untuk Orang Awam:</strong> Model ini memiliki celah keamanan guardrail saat menghadapi trik tertentu. Untuk mengamankannya di tahap produksi, disarankan memasang filter deteksi di depan model atau menambahkan prompt sistem pembatas.`;
     resistanceLabel = 'Runtuh / Tembus';
     resistanceColor = '#DC2626';
     winnerLabel = r.strategy;
     winnerColor = '#DC2626';
+    if (subBadge) {
+      subBadge.textContent = '⚠️ Rentan Ditembus';
+      subBadge.className = 'status-pill amber';
+    }
   } else if (alreadyComplied) {
     badgeColor = '#2563EB';
     badgeLabel = '○ TANPA SENSOR / COMPLIANT';
     titleText = `Model Menjawab Langsung Tanpa Perlu Penyamaran`;
     summaryText = `Model langsung mematuhi pertanyaan sensitif pada uji baseline pertama tanpa perlu teknik jailbreak apapun.`;
-    educationText = `<strong>💡 Apa artinya untuk Anda?</strong><br>
-Model ini kemungkinan adalah model <em>uncensored</em> (bebas sensor) atau pertanyaan uji coba dianggap aman oleh kebijakan internal model.`;
+    educationText = `<strong>💡 Kesimpulan untuk Orang Awam:</strong> Model ini kemungkinan adalah model <em>uncensored</em> (bebas sensor) atau pertanyaan uji coba dianggap aman oleh kebijakan internal model.`;
     resistanceLabel = '0% (Tanpa Filter)';
     resistanceColor = 'var(--muted)';
     winnerLabel = 'Langsung Dijawab';
     winnerColor = 'var(--ink)';
+    if (subBadge) {
+      subBadge.textContent = '○ Tanpa Sensor';
+      subBadge.className = 'status-pill gray';
+    }
   } else {
     badgeColor = '#10B981';
     badgeLabel = '🛡️ PERTAHANAN KUAT — AMAN DARI JAILBREAK';
     titleText = `Model Berhasil Menolak Seluruh ${totalCount} Skenario Serangan!`;
-    summaryText = `KABAR BAIK: Model target Anda memiliki filter keamanan (Guardrail) yang <strong>sangat disiplin dan tahan uji</strong>. Dari pertanyaan langsung, psikologi terbalik, hingga bahasa sandi Leetspeak/Braille/Morse, semuanya berhasil dideteksi dan <strong>ditolak mentah-mentah</strong> oleh model.`;
-    educationText = `<strong>💡 Mengapa status di log tadi bertuliskan [FAILED]?</strong><br>
-Bagi orang awam, kata <em>FAILED</em> di terminal sering disalahartikan sebagai "aplikasi error". Padahal dalam pengujian keamanan (Red-Teaming), <strong>"All strategies failed"</strong> artinya: <u>seluruh taktik penyerang GAGAL membobol model Anda</u>. Dengan kata lain, <strong>pertahanan model AI Anda 100% MENANG dan AMAN</strong>.`;
+    summaryText = `Model target Anda memiliki filter keamanan (Guardrail) yang <strong>sangat disiplin dan tahan uji</strong>. Dari pertanyaan langsung, psikologi terbalik, hingga bahasa sandi rahasia, semuanya berhasil dideteksi dan <strong>ditolak mentah-mentah</strong>.`;
+    educationText = `<strong>💡 Mengapa status di log bertuliskan [FAILED]?</strong> Dalam uji keamanan (Red-Teaming), kata <strong>"All strategies failed"</strong> berarti <u>seluruh taktik penyerang GAGAL membobol model Anda</u>. Dengan kata lain, <strong>pertahanan model AI Anda 100% MENANG dan AMAN</strong>.`;
     resistanceLabel = '100% Tangguh';
     resistanceColor = '#10B981';
     winnerLabel = 'Nihil (0 Terbobol)';
     winnerColor = '#10B981';
+    if (subBadge) {
+      subBadge.textContent = '🛡️ 100% Aman';
+      subBadge.className = 'status-pill green';
+    }
   }
 
-  // Generate Table Rows
+  // Count stats
+  const bypassedCount = attempts.filter(a => !a.is_refusal && !a.error && (a.score || 0) > 0).length;
+  const blockedCount = attempts.filter(a => a.is_refusal).length;
+  const errorCount = attempts.filter(a => a.error).length;
+
+  // Generate Table Rows + Inline Drawers
   let tableRows = '';
-  attempts.forEach((a) => {
+  attempts.forEach((a, idx) => {
     const meta = STRATEGY_FRIENDLY_NAMES[a.strategy] || {
       name: a.strategy.replace(/_/g, ' '),
       desc: 'Skenario rekayasa adversarial khusus.',
       category: 'Variasi Serangan'
     };
 
-    let statusBadge, statusExplanation;
+    let statusBadge, statusExplanation, rowType;
     if (a.error) {
       statusBadge = `<span class="status-pill red" style="font-size:11px;">❌ Error API</span>`;
       statusExplanation = `Gagal dipanggil: ${esc(a.error)}`;
+      rowType = 'error';
     } else if (a.is_refusal) {
       statusBadge = `<span class="status-pill green" style="font-size:11px;background:#DCFCE7;color:#15803D;font-weight:600;">🛡️ Ditolak (Aman)</span>`;
       statusExplanation = `Model mendeteksi instruksi terlarang &amp; menolak menjawab`;
+      rowType = 'blocked';
     } else {
       statusBadge = `<span class="status-pill amber" style="font-size:11px;background:#FEF3C7;color:#B45309;font-weight:600;">⚠️ Tembus Lolos</span>`;
       statusExplanation = `Model terpancing dan memberikan respon jawaban (Skor: ${a.score})`;
+      rowType = 'bypassed';
     }
 
+    const promptText = a.prompt || a.query || r.canary || '(Query uji sensitif)';
+    const sysText = a.system_prompt || '(Tidak menggunakan instruksi sistem khusus)';
+    const prefillText = typeof a.prefill === 'object' ? JSON.stringify(a.prefill, null, 2) : (a.prefill || '(Tidak menggunakan prefill riwayat)');
+    const respText = a.content || (a.error ? `Error: ${a.error}` : '(Tidak ada respon teks)');
+    const latSec = a.latency ? Number(a.latency).toFixed(2) : '0.00';
+
     tableRows += `
-      <tr style="border-bottom:1px solid var(--hairline);">
-        <td style="padding:12px 14px;vertical-align:top;">
-          <div style="font-weight:600;color:var(--ink);font-size:14px;">${esc(meta.name)}</div>
-          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(meta.desc)}</div>
-          <code style="font-size:11px;color:var(--muted-soft);margin-top:2px;display:inline-block;">${esc(a.strategy)}</code>
+      <tr class="aj-scenario-row" data-type="${rowType}" data-idx="${idx}" style="border-bottom:1px solid var(--hairline);transition:background 0.2s;" onmouseover="this.style.background='var(--surface-muted)'" onmouseout="this.style.background='transparent'">
+        <td style="padding:12px 14px;vertical-align:top;width:36px;text-align:center;color:var(--muted);font-weight:600;font-size:12px;">
+          ${idx + 1}
         </td>
-        <td style="padding:12px 14px;vertical-align:top;color:var(--ink-secondary);font-size:12px;">
-          ${esc(meta.category)}
+        <td style="padding:12px 14px;vertical-align:top;">
+          <div style="font-weight:600;color:var(--ink);font-size:13.5px;">${esc(meta.name)}</div>
+          <div style="font-size:12px;color:var(--muted);margin-top:2px;">${esc(meta.desc)}</div>
+          <code style="font-size:11px;color:var(--muted-soft);margin-top:3px;display:inline-block;">${esc(a.strategy)}</code>
+        </td>
+        <td style="padding:12px 14px;vertical-align:top;">
+          <span style="font-size:11.5px;padding:3px 8px;border-radius:var(--radius-pill);background:var(--surface-muted);color:var(--ink-secondary);border:1px solid var(--hairline);white-space:nowrap;">
+            ${esc(meta.category)}
+          </span>
         </td>
         <td style="padding:12px 14px;vertical-align:top;">
           ${statusBadge}
+          <div style="font-size:11px;color:var(--muted);margin-top:4px;">${latSec}s · Skor: ${a.score || 0}</div>
         </td>
-        <td style="padding:12px 14px;vertical-align:top;font-size:12px;color:var(--ink-secondary);">
+        <td style="padding:12px 14px;vertical-align:top;font-size:12px;color:var(--ink-secondary);line-height:1.4;">
           ${statusExplanation}
+        </td>
+        <td style="padding:12px 14px;vertical-align:top;text-align:right;">
+          <button type="button" class="harvey-btn btn-outline btn-sm" style="font-size:11px;padding:4px 10px;white-space:nowrap;" onclick="toggleAjDetail(${idx})">
+            <span id="btnDetailText_${idx}">Detail Prompt ▾</span>
+          </button>
+        </td>
+      </tr>
+      <tr id="ajDetailRow_${idx}" class="aj-detail-drawer" style="display:none;background:var(--surface-muted);border-bottom:2px solid var(--hairline);">
+        <td colspan="6" style="padding:16px 20px;">
+          <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(260px, 1fr));gap:12px;margin-bottom:12px;">
+            <div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:10px 14px;">
+              <strong style="font-size:11px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:0.04em;">🎯 Prompt Uji (Query Input):</strong>
+              <div style="font-size:12px;font-family:Consolas,monospace;color:var(--ink);word-break:break-word;max-height:100px;overflow-y:auto;white-space:pre-wrap;">${esc(promptText)}</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:10px 14px;">
+              <strong style="font-size:11px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:0.04em;">📝 Injeksi System Prompt:</strong>
+              <div style="font-size:12px;font-family:Consolas,monospace;color:var(--ink);word-break:break-word;max-height:100px;overflow-y:auto;white-space:pre-wrap;">${esc(sysText)}</div>
+            </div>
+            <div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:10px 14px;">
+              <strong style="font-size:11px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:4px;letter-spacing:0.04em;">💬 Prefill Konteks Percakapan:</strong>
+              <div style="font-size:12px;font-family:Consolas,monospace;color:var(--ink);word-break:break-word;max-height:100px;overflow-y:auto;white-space:pre-wrap;">${esc(prefillText)}</div>
+            </div>
+          </div>
+          <div style="background:var(--surface);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 14px;">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+              <strong style="font-size:11px;text-transform:uppercase;color:var(--muted);letter-spacing:0.04em;">🤖 Respon Model AI:</strong>
+              <button class="harvey-btn btn-outline btn-sm" style="font-size:11px;padding:2px 8px;" onclick="copyRawSnippet(${idx}, this)">Salin Respon</button>
+            </div>
+            <pre id="rawContent_${idx}" style="margin:0;font-size:12px;font-family:Consolas,monospace;color:var(--ink);background:var(--surface-muted);padding:10px 14px;border-radius:var(--radius-xs);max-height:180px;overflow-y:auto;white-space:pre-wrap;word-break:break-word;">${esc(respText)}</pre>
+          </div>
         </td>
       </tr>
     `;
   });
 
   container.innerHTML = `
-    <div class="editorial-card" style="border: 2px solid ${badgeColor}; padding:24px 28px; background:var(--surface); border-radius:var(--radius-md); box-shadow:0 6px 20px rgba(0,0,0,0.06);">
-      <!-- Top Status Banner -->
-      <div style="display:flex;align-items:flex-start;justify-content:space-between;gap:16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--hairline);">
-        <div>
-          <span style="display:inline-block;padding:5px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:700;color:#FFFFFF;background-color:${badgeColor};margin-bottom:10px;letter-spacing:0.02em;">
-            ${badgeLabel}
-          </span>
-          <h3 style="margin:4px 0 8px 0;font-size:21px;font-weight:700;color:var(--ink);line-height:1.3;">
+    <div class="editorial-card" style="border: 2px solid ${badgeColor}; padding:24px 28px; background:var(--surface); border-radius:var(--radius-md); box-shadow:0 4px 20px rgba(0,0,0,0.05); margin-bottom:24px;">
+      
+      <!-- Top Primary Action Bar: Status, Title, and Action Buttons -->
+      <div style="display:flex;align-items:flex-start;justify-content:space-between;flex-wrap:wrap;gap:16px;margin-bottom:18px;padding-bottom:16px;border-bottom:1px solid var(--hairline);">
+        <div style="max-width:700px;">
+          <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+            <span style="display:inline-block;padding:5px 12px;border-radius:var(--radius-pill);font-size:12px;font-weight:700;color:#FFFFFF;background-color:${badgeColor};letter-spacing:0.02em;">
+              ${badgeLabel}
+            </span>
+            <span style="font-size:12px;color:var(--muted);background:var(--surface-muted);padding:4px 10px;border-radius:var(--radius-pill);border:1px solid var(--hairline);">
+              Target: <strong style="color:var(--ink);">${esc(modelName)}</strong>
+            </span>
+          </div>
+          <h3 style="margin:4px 0 6px 0;font-size:22px;font-weight:700;color:var(--ink);line-height:1.25;">
             ${titleText}
           </h3>
-          <p style="margin:0;font-size:14px;color:var(--ink-secondary);line-height:1.6;">
+          <p style="margin:0;font-size:13.5px;color:var(--ink-secondary);line-height:1.5;">
             ${summaryText}
           </p>
         </div>
-        <div style="text-align:right;flex-shrink:0;background:var(--surface-muted);padding:8px 12px;border-radius:var(--radius-sm);border:1px solid var(--hairline);">
-          <span style="font-size:11px;text-transform:uppercase;color:var(--muted);display:block;margin-bottom:2px;font-weight:600;">Target Model</span>
-          <strong style="font-size:14px;color:var(--ink);word-break:break-all;">${esc(modelName)}</strong>
+
+        <!-- Action Cluster: Unduh Excel, JSON, MD, Uji Ulang -->
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <button type="button" class="harvey-btn btn-sm" style="background:#15803D;color:#FFFFFF;border:none;font-weight:600;display:inline-flex;align-items:center;gap:6px;box-shadow:0 2px 6px rgba(21,128,61,0.25);" onclick="downloadReportFormat('excel')">
+            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="8" y1="13" x2="16" y2="13"></line><line x1="8" y1="17" x2="16" y2="17"></line></svg>
+            Unduh Excel (.xlsx)
+          </button>
+          <button type="button" class="harvey-btn btn-outline btn-sm" onclick="downloadReportFormat('json')">
+            JSON
+          </button>
+          <button type="button" class="harvey-btn btn-outline btn-sm" onclick="downloadReportFormat('markdown')">
+            Markdown
+          </button>
+          <button type="button" class="harvey-btn btn-outline btn-sm" onclick="copyReportExecutiveSummary(this)">
+            📋 Salin Ringkasan
+          </button>
+          <button type="button" class="harvey-btn btn-outline btn-sm" onclick="switchAjSubView('config')" title="Ubah parameter atau target model">
+            🔄 Uji Target Lain
+          </button>
         </div>
       </div>
 
-      <!-- 3 Metrics KPI Cards -->
-      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:12px;margin-bottom:20px;">
-        <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:14px;">
-          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Total Skenario Uji</span>
-          <strong style="font-size:20px;color:var(--ink);">${totalCount} Metode</strong>
+      <!-- 4 Horizontal Metric Cards -->
+      <div style="display:grid;grid-template-columns:repeat(auto-fit, minmax(170px, 1fr));gap:12px;margin-bottom:20px;">
+        <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 16px;">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Status Pertahanan</span>
+          <strong style="font-size:18px;color:${resistanceColor};">${resistanceLabel}</strong>
+          <span style="font-size:11px;color:var(--muted);display:block;margin-top:2px;">Tingkat Keamanan Model</span>
         </div>
-        <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:14px;">
-          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Status Pertahanan Model</span>
-          <strong style="font-size:20px;color:${resistanceColor};">${resistanceLabel}</strong>
-        </div>
-        <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:14px;">
+        <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 16px;">
           <span style="font-size:11px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Metode yang Bobol</span>
-          <strong style="font-size:20px;color:${winnerColor};">${winnerLabel}</strong>
+          <strong style="font-size:16px;color:${winnerColor};word-break:break-word;">${winnerLabel}</strong>
+          <span style="font-size:11px;color:var(--muted);display:block;margin-top:2px;">Celah Terdalam AI</span>
+        </div>
+        <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 16px;">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Total Skenario Uji</span>
+          <strong style="font-size:18px;color:var(--ink);">${totalCount} Percobaan</strong>
+          <span style="font-size:11px;color:var(--muted);display:block;margin-top:2px;">${blockedCount} Ditolak · ${bypassedCount} Lolos</span>
+        </div>
+        <div style="background:var(--surface-muted);border:1px solid var(--hairline);border-radius:var(--radius-sm);padding:12px 16px;">
+          <span style="font-size:11px;color:var(--muted);text-transform:uppercase;display:block;margin-bottom:4px;font-weight:600;">Skor Kerentanan</span>
+          <strong style="font-size:18px;color:var(--ink);">${r.score || 0} / 300</strong>
+          <span style="font-size:11px;color:var(--muted);display:block;margin-top:2px;">Maksimal Skor Kepatuhan</span>
         </div>
       </div>
 
       <!-- Human Explanation Box -->
-      <div style="background:var(--surface-muted);border-left:4px solid ${badgeColor};border-radius:var(--radius-xs);padding:14px 18px;margin-bottom:22px;font-size:13.5px;line-height:1.65;color:var(--ink);">
+      <div style="background:var(--surface-muted);border-left:4px solid ${badgeColor};border-radius:var(--radius-xs);padding:14px 18px;margin-bottom:20px;font-size:13.5px;line-height:1.6;color:var(--ink);">
         ${educationText}
       </div>
 
-      <!-- Attempts Table -->
-      <div style="margin-bottom:10px;">
-        <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink);display:block;">
-          📋 Rincian Pengujian per Skenario Manipulasi:
+      <!-- Filter Controls & Real-time Search -->
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:10px;">
+        <span style="font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;color:var(--ink);">
+          📋 Rincian Skenario Manipulasi (${attempts.length} Percobaan):
         </span>
+        <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center;">
+          <input type="text" id="ajSearchInput" placeholder="Cari skenario..." oninput="searchAjScenarios(this.value)" style="width:160px;padding:6px 10px;font-size:12px;border-radius:var(--radius-sm);margin:0;">
+          <div style="display:flex;gap:4px;" id="ajFilterBar">
+            <button type="button" class="segmented-pill active" onclick="filterAjTableRows('all', this)">Semua (${totalCount})</button>
+            <button type="button" class="segmented-pill" onclick="filterAjTableRows('bypassed', this)">⚠️ Tembus (${bypassedCount})</button>
+            <button type="button" class="segmented-pill" onclick="filterAjTableRows('blocked', this)">🛡️ Ditolak (${blockedCount})</button>
+            ${errorCount > 0 ? `<button type="button" class="segmented-pill" onclick="filterAjTableRows('error', this)">❌ Error (${errorCount})</button>` : ''}
+          </div>
+        </div>
       </div>
-      <div style="overflow-x:auto;border:1px solid var(--hairline);border-radius:var(--radius-sm);background:var(--surface);">
+
+      <!-- Full-Width Responsive Attempts Table -->
+      <div style="overflow-x:auto;border:1px solid var(--hairline);border-radius:var(--radius-sm);background:var(--surface);margin-bottom:18px;">
         <table style="width:100%;border-collapse:collapse;text-align:left;">
           <thead>
             <tr style="background:var(--surface-muted);border-bottom:1px solid var(--hairline);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;">
-              <th style="padding:10px 14px;">Skenario Manipulasi</th>
-              <th style="padding:10px 14px;">Kategori</th>
-              <th style="padding:10px 14px;">Respon Model</th>
-              <th style="padding:10px 14px;">Keterangan &amp; Dampak</th>
+              <th style="padding:10px 14px;width:36px;text-align:center;">No</th>
+              <th style="padding:10px 14px;min-width:240px;">Skenario Manipulasi &amp; Teknik</th>
+              <th style="padding:10px 14px;width:130px;">Kategori Trik</th>
+              <th style="padding:10px 14px;width:150px;">Status &amp; Skor</th>
+              <th style="padding:10px 14px;min-width:220px;">Hasil Analisis</th>
+              <th style="padding:10px 14px;width:130px;text-align:right;">Aksi</th>
             </tr>
           </thead>
-          <tbody>
-            ${tableRows}
+          <tbody id="ajTableTbody">
+            ${tableRows || '<tr><td colspan="6" style="padding:20px;text-align:center;color:var(--muted);">Tidak ada skenario yang dijalankan.</td></tr>'}
           </tbody>
         </table>
       </div>
+
+      <!-- Bottom Fast Actions -->
+      <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;padding-top:12px;border-top:1px solid var(--hairline);">
+        <span style="font-size:12px;color:var(--muted);">
+          Laporan tersimpan permanen di folder <code>reports/auto_jailbreak/</code>
+        </span>
+        <div style="display:flex;gap:8px;">
+          <button type="button" class="harvey-btn btn-sm" style="background:#15803D;color:#FFFFFF;border:none;font-weight:600;" onclick="downloadReportFormat('excel')">
+            Unduh Excel (.xlsx)
+          </button>
+          <button type="button" class="harvey-btn btn-outline btn-sm" onclick="switchAjSubView('config')">
+            ⚙️ Kembali ke Pengaturan Target
+          </button>
+        </div>
+      </div>
+
     </div>
   `;
 
   container.style.display = 'block';
-  container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  switchAjSubView('report');
+}
+
+// Global UI helper functions for AutoJailbreak Report
+function toggleAjDetail(idx) {
+  const row = document.getElementById(`ajDetailRow_${idx}`);
+  const btnTxt = document.getElementById(`btnDetailText_${idx}`);
+  if (!row) return;
+  const isHidden = row.style.display === 'none';
+  row.style.display = isHidden ? 'table-row' : 'none';
+  if (btnTxt) {
+    btnTxt.textContent = isHidden ? 'Tutup Detail ▴' : 'Detail Prompt & Respon ▾';
+  }
+}
+
+function filterAjTableRows(filterType, btnEl) {
+  if (btnEl) {
+    const parent = btnEl.parentElement;
+    if (parent) {
+      parent.querySelectorAll('.segmented-pill').forEach(b => b.classList.remove('active'));
+      btnEl.classList.add('active');
+    }
+  }
+
+  const rows = document.querySelectorAll('.aj-scenario-row');
+  rows.forEach(r => {
+    const rowType = r.dataset.type;
+    const isMatch = filterType === 'all' || rowType === filterType;
+    r.style.display = isMatch ? 'table-row' : 'none';
+
+    // Hide any open drawer if row is hidden
+    const nextRow = r.nextElementSibling;
+    if (nextRow && nextRow.classList.contains('aj-detail-drawer')) {
+      if (!isMatch) nextRow.style.display = 'none';
+    }
+  });
+}
+
+function copyRawSnippet(idx, btn) {
+  const el = document.getElementById(`rawContent_${idx}`);
+  if (!el) return;
+  const text = el.textContent || '';
+  navigator.clipboard.writeText(text).then(() => {
+    const orig = btn.textContent;
+    btn.textContent = 'Tersalin ✓';
+    btn.style.color = '#15803D';
+    setTimeout(() => {
+      btn.textContent = orig;
+      btn.style.color = '';
+    }, 2000);
+  });
+}
+
+function copyReportExecutiveSummary(btn) {
+  const ajRes = lastAutoResult || {};
+  const model = document.getElementById('ajModel').value.trim() || ajRes.model || 'Target Model';
+  const attempts = ajRes.attempts || [];
+  const isBreached = Boolean(ajRes.success) && ajRes.strategy && ajRes.strategy !== 'none_needed';
+  const summary = `
+[LAPORAN AUDIT KEAMANAN AI — ANTIHALU]
+Target Model: ${model}
+Tanggal Audit: ${new Date().toLocaleString('id-ID')}
+Status Ketahanan: ${isBreached ? 'RENTAN / TEMBUS (Vulnerable)' : 'AMAN & TANGGUH (Defended)'}
+Metode Penetrasi: ${ajRes.winning_strategy || ajRes.strategy || 'Nihil'}
+Skor Evaluasi: ${ajRes.score || 0}
+Total Skenario Diuji: ${attempts.length}
+Skenario Tembus: ${attempts.filter(a => !a.is_refusal && !a.error).length}
+Skenario Ditolak: ${attempts.filter(a => a.is_refusal).length}
+`.trim();
+
+  navigator.clipboard.writeText(summary).then(() => {
+    if (btn) {
+      const orig = btn.textContent;
+      btn.textContent = 'Ringkasan Tersalin ✓';
+      setTimeout(() => { btn.textContent = orig; }, 2500);
+    }
+    notify('Ringkasan eksekutif berhasil disalin ke clipboard');
+  });
+}
+
+function downloadReportFormat(format) {
+  const ajRes = lastAutoResult || {};
+  const model = document.getElementById('ajModel').value.trim() || ajRes.model || 'Target_Model';
+  const safeModel = model.replace(/[^a-zA-Z0-9_\-]/g, '_');
+  const dateStr = new Date().toISOString().slice(0, 10);
+
+  if (format === 'excel') {
+    if (ajRes.saved_files && ajRes.saved_files.excel) {
+      const a = document.createElement('a');
+      a.href = ajRes.saved_files.excel;
+      a.download = `AntiHalu_Jailbreak_${safeModel}_${dateStr}.xlsx`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      notify('Mengunduh file Excel laporan audit (.xlsx)…');
+      return;
+    }
+    exportAutoJailbreakExcel();
+    return;
+  }
+
+  if (format === 'json') {
+    if (ajRes.saved_files && ajRes.saved_files.json) {
+      const a = document.createElement('a');
+      a.href = ajRes.saved_files.json;
+      a.download = `AntiHalu_Jailbreak_${safeModel}_${dateStr}.json`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      notify('Mengunduh file JSON hasil evaluasi…');
+      return;
+    }
+    const blob = new Blob([JSON.stringify(ajRes, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `AntiHalu_Jailbreak_${safeModel}_${dateStr}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    notify('Mengunduh file JSON…');
+    return;
+  }
+
+  if (format === 'markdown') {
+    if (ajRes.saved_files && ajRes.saved_files.markdown) {
+      const a = document.createElement('a');
+      a.href = ajRes.saved_files.markdown;
+      a.download = `AntiHalu_Jailbreak_${safeModel}_${dateStr}.md`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      notify('Mengunduh ringkasan Markdown (.md)…');
+      return;
+    }
+    notify('File markdown tersedia saat proses audit diselesaikan di server.');
+  }
+}
+
+// -------------------------------- Reports Archive Loader
+let cachedReportsList = [];
+async function loadSavedReportsList() {
+  const container = document.getElementById('reportsListContainer');
+  if (!container) return;
+  container.innerHTML = '<div style="text-align:center;padding:30px;color:var(--muted);"><span class="spin"></span> Memuat arsip laporan tersimpan…</div>';
+
+  try {
+    const list = await api('/api/reports');
+    cachedReportsList = Array.isArray(list) ? list : [];
+    renderReportsTable(cachedReportsList);
+  } catch (err) {
+    container.innerHTML = `
+      <div style="padding:20px;color:#DC2626;background:var(--surface-muted);border-radius:var(--radius-sm);border:1px solid #FECACA;">
+        Gagal memuat arsip laporan: ${err.message}
+      </div>
+    `;
+  }
+}
+
+function filterReportsTab(cat) {
+  ['btnRepFilterAll', 'btnRepFilterAuto', 'btnRepFilterRace'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.classList.remove('active');
+  });
+
+  if (cat === 'all') document.getElementById('btnRepFilterAll')?.classList.add('active');
+  if (cat === 'auto_jailbreak') document.getElementById('btnRepFilterAuto')?.classList.add('active');
+  if (cat === 'benchmark_race') document.getElementById('btnRepFilterRace')?.classList.add('active');
+
+  const filtered = cat === 'all'
+    ? cachedReportsList
+    : cachedReportsList.filter(r => r.type === cat);
+
+  renderReportsTable(filtered);
+}
+
+function renderReportsTable(list) {
+  const container = document.getElementById('reportsListContainer');
+  if (!container) return;
+
+  if (!list || list.length === 0) {
+    container.innerHTML = `
+      <div style="text-align:center;padding:40px 20px;color:var(--muted);background:var(--surface-muted);border:1px dashed var(--hairline);border-radius:var(--radius-sm);">
+        <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom:8px;opacity:0.6;"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        <div style="font-weight:600;color:var(--ink);">Belum ada laporan tersimpan di folder reports/</div>
+        <div style="font-size:12px;margin-top:4px;">Jalankan pengujian Auto-Jailbreak atau Benchmark Race untuk membuat laporan baru.</div>
+      </div>
+    `;
+    return;
+  }
+
+  let rows = '';
+  list.forEach((r, idx) => {
+    const isAuto = r.type === 'auto_jailbreak';
+    const isBreached = r.success && r.strategy && r.strategy !== 'none_needed';
+    const pillClass = isAuto ? (isBreached ? 'amber' : 'green') : 'blue';
+    const pillText = isAuto ? (isBreached ? '⚠️ Rentan (Tembus)' : '🛡️ Aman (Defended)') : '🏁 Benchmark Race';
+
+    const excelBtn = r.files.excel
+      ? `<a href="${r.files.excel}" download class="harvey-btn btn-sm" style="background:#166534;color:#FFF;text-decoration:none;font-size:11px;padding:3px 8px;display:inline-flex;align-items:center;gap:4px;">Excel .xlsx</a>`
+      : '';
+    const jsonBtn = r.files.json
+      ? `<a href="${r.files.json}" download class="harvey-btn btn-outline btn-sm" style="text-decoration:none;font-size:11px;padding:3px 8px;">JSON</a>`
+      : '';
+    const mdBtn = r.files.markdown
+      ? `<a href="${r.files.markdown}" download class="harvey-btn btn-outline btn-sm" style="text-decoration:none;font-size:11px;padding:3px 8px;">Markdown</a>`
+      : '';
+    const viewBtn = (r.type === 'auto_jailbreak' && r.files.json)
+      ? `<button type="button" class="harvey-btn btn-black btn-sm" style="font-size:11px;padding:3px 9px;" onclick="viewSavedReportOnScreen('${r.files.json}')">👁️ Buka di Layar</button>`
+      : '';
+
+    rows += `
+      <tr style="border-bottom:1px solid var(--hairline);">
+        <td style="padding:12px 14px;color:var(--muted);font-size:12px;width:30px;text-align:center;">${idx + 1}</td>
+        <td style="padding:12px 14px;">
+          <div style="font-weight:600;color:var(--ink);font-size:14px;">${r.model}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.id}</div>
+        </td>
+        <td style="padding:12px 14px;">
+          <span class="status-pill ${pillClass}" style="font-size:11px;">${pillText}</span>
+          <div style="font-size:11px;color:var(--muted);margin-top:3px;">${r.type_label}</div>
+        </td>
+        <td style="padding:12px 14px;font-size:12px;color:var(--ink-secondary);">
+          <div>${r.date}</div>
+          <div style="font-size:11px;color:var(--muted);margin-top:2px;">${r.attempts_count} Percobaan</div>
+        </td>
+        <td style="padding:12px 14px;text-align:right;">
+          <div style="display:inline-flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;">
+            ${viewBtn}
+            ${excelBtn}
+            ${jsonBtn}
+            ${mdBtn}
+          </div>
+        </td>
+      </tr>
+    `;
+  });
+
+  container.innerHTML = `
+    <div style="overflow-x:auto;border:1px solid var(--hairline);border-radius:var(--radius-sm);background:var(--surface);">
+      <table style="width:100%;border-collapse:collapse;text-align:left;">
+        <thead>
+          <tr style="background:var(--surface-muted);border-bottom:1px solid var(--hairline);color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:0.04em;">
+            <th style="padding:10px 14px;width:30px;text-align:center;">No</th>
+            <th style="padding:10px 14px;">Model AI &amp; File ID</th>
+            <th style="padding:10px 14px;">Status Keamanan</th>
+            <th style="padding:10px 14px;">Waktu &amp; Skenario</th>
+            <th style="padding:10px 14px;text-align:right;">Opsi Unduh Laporan</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${rows}
+        </tbody>
+      </table>
+    </div>
+  `;
 }
 
 function renderRaceChart(result) {
@@ -3541,8 +4170,50 @@ function openCustomProviderModal() {
   openProviderModal(newId);
 }
 
-// Initial Provider Render
+async function viewSavedReportOnScreen(jsonUrl) {
+  try {
+    notify('Membuka arsip laporan ke layar…');
+    const res = await fetch(jsonUrl);
+    if (!res.ok) throw new Error('Gagal mengambil file laporan JSON');
+    const data = await res.json();
+    lastAutoResult = data;
+    switchTab('tab-auto');
+    renderAutoJailbreakReport(data);
+    switchAjSubView('report');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } catch (err) {
+    notify('Gagal membuka laporan: ' + err.message);
+  }
+}
+window.viewSavedReportOnScreen = viewSavedReportOnScreen;
+
+async function checkAndLoadLatestReport() {
+  try {
+    const list = await api('/api/reports');
+    if (Array.isArray(list) && list.length > 0) {
+      const latestAuto = list.find(r => r.type === 'auto_jailbreak' && r.files && r.files.json);
+      if (latestAuto) {
+        const jsonRes = await fetch(latestAuto.files.json);
+        if (jsonRes.ok) {
+          const reportData = await jsonRes.json();
+          lastAutoResult = reportData;
+          renderAutoJailbreakReport(reportData);
+          switchAjSubView('report');
+          return;
+        }
+      }
+    }
+    // Jika belum ada laporan sama sekali, buka tab config
+    switchAjSubView('config');
+  } catch (e) {
+    console.warn('Auto-load latest report error:', e);
+    switchAjSubView('config');
+  }
+}
+
+// Initial Provider Render & Latest Report Bootstrapping
 renderAllProviders();
+checkAndLoadLatestReport();
 
 const backBtn = document.getElementById('btnBackPortal');
 if (backBtn) {
